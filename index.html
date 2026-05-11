@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSACS — Bittensor Subnet AI Classification Standard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --border: #1e2329;
+    --border-light: #252b33;
+    --text: #e8eaed;
+    --text-muted: #6b7280;
+    --text-dim: #374151;
+    --accent: #3b82f6;
+    --green: #10b981;
+    --red: #ef4444;
+
+    --ii:  #60a5fa;
+    --ci:  #34d399;
+    --dk:  #fbbf24;
+    --fi:  #f87171;
+    --aa:  #a78bfa;
+    --cg:  #f472b6;
+    --sv:  #6ee7b7;
+    --tm:  #e8eaed;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,12,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex; gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 5rem 2rem 3rem;
+    max-width: 900px;
+    margin: 0 auto;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 300;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+    color: var(--text);
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--text-muted);
+  }
+  .hero p {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 600px;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── TOTAL MARKET CARD ── */
+  .tm-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .tm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .tm-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+  .tm-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 300;
+  }
+  .tm-stats {
+    display: flex; gap: 2.5rem; flex-wrap: wrap;
+  }
+  .stat {
+    text-align: right;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text);
+  }
+  .stat-value.up { color: var(--green); }
+  .stat-value.down { color: var(--red); }
+
+  /* period toggles */
+  .period-toggle {
+    display: flex; gap: 6px; margin-bottom: 1rem;
+  }
+  .period-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .period-btn:hover { border-color: var(--text-muted); color: var(--text); }
+  .period-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* chart */
+  .chart-wrap { width: 100%; height: 220px; position: relative; }
+  .chart-wrap svg { width: 100%; height: 100%; overflow: visible; }
+
+  .source-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── SECTOR GRID ── */
+  .sector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .sector-card {
+    background: var(--surface);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .sector-card:hover { background: #14181e; }
+  .sector-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+
+  .sector-card[data-sector="Intelligence & Inference"]::before { background: var(--ii); }
+  .sector-card[data-sector="Compute & Infrastructure"]::before { background: var(--ci); }
+  .sector-card[data-sector="Data & Knowledge"]::before { background: var(--dk); }
+  .sector-card[data-sector="Finance & DeFi"]::before { background: var(--fi); }
+  .sector-card[data-sector="Agents & Applications"]::before { background: var(--aa); }
+  .sector-card[data-sector="Culture & Gaming"]::before { background: var(--cg); }
+  .sector-card[data-sector="Security & Verification"]::before { background: var(--sv); }
+
+  .sc-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 1rem;
+    padding-left: 8px;
+  }
+  .sc-metrics {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding-left: 8px;
+  }
+  .sc-level {
+    font-family: 'DM Mono', monospace;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text);
+  }
+  .sc-change {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .sc-change.up { color: var(--green); }
+  .sc-change.down { color: var(--red); }
+
+  .sc-mini-chart {
+    width: 100%;
+    height: 48px;
+    margin-top: 0.75rem;
+    padding-left: 8px;
+  }
+  .sc-mini-chart svg { width: 100%; height: 100%; overflow: visible; }
+
+  .sc-inception {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+    padding-left: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── METHODOLOGY ── */
+  .method-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  .method-row {
+    background: var(--surface);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .method-key {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .method-val {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* taxonomy table */
+  .taxonomy-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .taxonomy-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .taxonomy-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .taxonomy-table tr:last-child td { border-bottom: none; }
+  .taxonomy-table tr:hover td { background: #0d1015; }
+  .sector-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* disclosure */
+  .disclosure {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    font-weight: 300;
+    font-style: italic;
+  }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+  }
+  .footer-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .footer-note {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  @media (max-width: 600px) {
+    .method-grid { grid-template-columns: 1fr; }
+    .tm-header { flex-direction: column; }
+    .tm-stats { gap: 1.5rem; }
+    .stat { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">BSACS</div>
+  <ul class="nav-links">
+    <li><a href="#indexes">Indexes</a></li>
+    <li><a href="#methodology">Methodology</a></li>
+    <li><a href="#taxonomy">Taxonomy</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Bittensor Subnet AI Classification Standard</div>
+  <h1>The index layer for<br><em>decentralized AI</em></h1>
+  <p>BSACS classifies and benchmarks the Bittensor subnet ecosystem using a three-tier taxonomy modeled on the CoinDesk Digital Asset Classification Standard (DACS). Seven sector indexes track the performance of classified subnets from inception September 4, 2025.</p>
+</div>
+
+<!-- TOTAL MARKET -->
+<div class="section" id="indexes">
+  <div class="section-label">Total Market Index</div>
+
+  <div class="tm-card">
+    <div class="tm-header">
+      <div>
+        <div class="tm-title">BSACS Total Market Index (BSACS-TM)</div>
+        <div class="tm-subtitle">Market cap-weighted — all classified subnets — base 1000 on Sep 4, 2025</div>
+      </div>
+      <div class="tm-stats">
+        <div class="stat">
+          <div class="stat-label">Current</div>
+          <div class="stat-value" id="tm-current">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Change</div>
+          <div class="stat-value" id="tm-change">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Period High</div>
+          <div class="stat-value" id="tm-high">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Period Low</div>
+          <div class="stat-value" id="tm-low">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="period-toggle" id="tm-toggle">
+      <button class="period-btn" data-period="1W">1W</button>
+      <button class="period-btn" data-period="1M">1M</button>
+      <button class="period-btn active" data-period="ALL">ALL</button>
+    </div>
+    <div class="chart-wrap" id="tm-chart"></div>
+    <div class="source-note" id="tm-source">Source: Taostats API — loading...</div>
+  </div>
+</div>
+
+<!-- SECTOR INDEXES -->
+<div class="section">
+  <div class="section-label">Sector Indexes — Base 1000 on Sep 4, 2025</div>
+  <div class="sector-grid" id="sector-grid"></div>
+</div>
+
+<!-- METHODOLOGY -->
+<div class="section" id="methodology">
+  <div class="section-label">Index Methodology</div>
+  <div class="method-grid">
+    <div class="method-row">
+      <span class="method-key">Index Family</span>
+      <span class="method-val">8 indexes — 7 BSACS sector indexes + Total Market (BSACS-TM)</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Base Date</span>
+      <span class="method-val">September 4, 2025 — base value 1000 for all indexes</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Weighting</span>
+      <span class="method-val">Market cap weighted. Daily weights = prior-day market cap / total sector market cap</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Formula</span>
+      <span class="method-val">Index(t) = Index(t−1) × Σ( weight(i) × price(i,t) / price(i,t−1) )</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Rebalancing</span>
+      <span class="method-val">Continuous daily. Weights recalculate every day using prior-day market caps</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">New Entrant Rule</span>
+      <span class="method-val">Weight = 0 on first appearance. Enters fully from day 2. Prevents distortion from new constituents</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Eligibility</span>
+      <span class="method-val">Must have verified public description. Subnets without documentation flagged Unclassified and excluded from sector indexes</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Exclusions</span>
+      <span class="method-val">SN0 (Root network) excluded — not an investable subnet</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Price Data</span>
+      <span class="method-val">USD price from Taostats API pool endpoint — AMM price from on-chain liquidity pool × TAO/USD rate</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Classification</span>
+      <span class="method-val">BSACS taxonomy — 3 tiers: Sector → Industry Group → Industry. Modeled on CoinDesk DACS. Primary classification only for index purposes</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">DACS Analogy</span>
+      <span class="method-val">DACS classifies TAO at the protocol layer. BSACS classifies subnets at the application layer — additive, not competing</span>
+    </div>
+    <div class="method-row">
+      <span class="method-key">Data Source</span>
+      <span class="method-val">Taostats API (api.taostats.io) — descriptions from github.com/taostat/subnets-infos</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAXONOMY -->
+<div class="section" id="taxonomy">
+  <div class="section-label">BSACS Taxonomy — 7 Sectors</div>
+  <table class="taxonomy-table">
+    <thead>
+      <tr>
+        <th>Sector</th>
+        <th>Definition</th>
+        <th>DACS Analogue</th>
+        <th>Example Subnets</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--ci)"></span>Compute &amp; Infrastructure</td>
+        <td>GPU compute, distributed training, and network nodes — the resource layer on which all other subnets run</td>
+        <td>Computing</td>
+        <td>Templar SN3, Targon SN4, Compute SN51</td>
+      </tr>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--ii)"></span>Intelligence &amp; Inference</td>
+        <td>Live AI model outputs — text, image, audio, video — delivered as a service to end users or applications</td>
+        <td>Computing</td>
+        <td>Nineteen SN19, De-Val SN15, Nova SN68</td>
+      </tr>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--dk)"></span>Data &amp; Knowledge</td>
+        <td>Data collection, storage, indexing, and retrieval for use by other AI systems and subnets</td>
+        <td>Computing / Oracle</td>
+        <td>Omega SN24, FakeNews SN66, Masa SN42</td>
+      </tr>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--fi)"></span>Finance &amp; DeFi</td>
+        <td>Financial products — trading signals, price forecasts, yield optimization, and prediction markets</td>
+        <td>DeFi</td>
+        <td>PTN SN8, Synth SN50, Bettensor SN30</td>
+      </tr>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--aa)"></span>Agents &amp; Applications</td>
+        <td>Autonomous AI agents executing real-world tasks end-to-end, at the application layer above inference</td>
+        <td>No DACS analogue</td>
+        <td>LeadPoet SN71, BitAgent SN20, WebGenieAI SN54</td>
+      </tr>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--cg)"></span>Culture &amp; Gaming</td>
+        <td>Creative AI content — roleplay, 3D generation, audio, and AI-native entertainment experiences</td>
+        <td>Culture &amp; Entertainment</td>
+        <td>Dippy SN11, Three Gen SN17, Neural3D SN46</td>
+      </tr>
+      <tr>
+        <td><span class="sector-dot" style="background:var(--sv)"></span>Security &amp; Verification</td>
+        <td>AI-powered security — cybersecurity testing, AI-generated content detection, private network infrastructure</td>
+        <td>No DACS analogue</td>
+        <td>BitMind SN34, Red Team SN61, Bitsec SN60</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DISCLOSURE -->
+<div class="section">
+  <div class="section-label">Disclosure</div>
+  <p class="disclosure">This index is a data and informational index only. It is provided for general informational and analytical purposes and does not constitute investment advice, financial advice, a recommendation, or an offer or solicitation to buy or sell any security, digital asset, or other financial instrument. The index is not an investable product, does not represent an actual or hypothetical investment portfolio, and cannot be invested in directly. The index is calculated using third-party data sources believed to be reliable; however, the index provider makes no representation or warranty as to the accuracy, completeness, or timeliness of the data or the index. Past performance is not indicative of future results.</p>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">BSACS — Bittensor Subnet AI Classification Standard</div>
+    <div class="footer-note">Data: Taostats API · Classification: BSACS Taxonomy · Modeled on CoinDesk DACS</div>
+  </div>
+</footer>
+
+<script>
+const SECTOR_COLORS = {
+  'Intelligence & Inference': 'var(--ii)',
+  'Compute & Infrastructure': 'var(--ci)',
+  'Data & Knowledge':         'var(--dk)',
+  'Finance & DeFi':           'var(--fi)',
+  'Agents & Applications':    'var(--aa)',
+  'Culture & Gaming':         'var(--cg)',
+  'Security & Verification':  'var(--sv)',
+  'Total Market (BSACS-TM)':  'var(--tm)',
+};
+
+const SECTOR_COLOR_HEX = {
+  'Intelligence & Inference': '#60a5fa',
+  'Compute & Infrastructure': '#34d399',
+  'Data & Knowledge':         '#fbbf24',
+  'Finance & DeFi':           '#f87171',
+  'Agents & Applications':    '#a78bfa',
+  'Culture & Gaming':         '#f472b6',
+  'Security & Verification':  '#6ee7b7',
+  'Total Market (BSACS-TM)':  '#e8eaed',
+};
+
+const SECTORS = [
+  'Intelligence & Inference',
+  'Compute & Infrastructure',
+  'Data & Knowledge',
+  'Finance & DeFi',
+  'Agents & Applications',
+  'Culture & Gaming',
+  'Security & Verification',
+];
+
+let allData = [];
+let tmPeriod = 'ALL';
+
+function filterByPeriod(data, period) {
+  if (period === 'ALL') return data;
+  const last = new Date(data[data.length-1].date);
+  const cutoff = new Date(last);
+  if (period === '1W') cutoff.setDate(cutoff.getDate() - 7);
+  if (period === '1M') cutoff.setMonth(cutoff.getMonth() - 1);
+  return data.filter(d => new Date(d.date) >= cutoff);
+}
+
+function pctChange(data, key) {
+  const valid = data.filter(d => d[key] != null);
+  if (valid.length < 2) return 0;
+  return ((valid[valid.length-1][key] / valid[0][key]) - 1) * 100;
+}
+
+function drawLineChart(containerId, data, key, color, height=220) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+
+  const values = data.map(d => d[key]).filter(v => v != null);
+  if (values.length < 2) return;
+
+  const W = container.clientWidth || 800;
+  const H = height;
+  const pad = { top: 10, right: 10, bottom: 24, left: 50 };
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', W).attr('height', H);
+
+  const xScale = d3.scalePoint()
+    .domain(data.map(d => d.date))
+    .range([pad.left, W - pad.right]);
+
+  const yScale = d3.scaleLinear()
+    .domain([d3.min(values) * 0.97, d3.max(values) * 1.02])
+    .range([H - pad.bottom, pad.top]);
+
+  // grid lines
+  const yTicks = yScale.ticks(4);
+  svg.selectAll('.grid-line')
+    .data(yTicks).enter()
+    .append('line')
+    .attr('x1', pad.left).attr('x2', W - pad.right)
+    .attr('y1', d => yScale(d)).attr('y2', d => yScale(d))
+    .attr('stroke', '#1e2329').attr('stroke-width', 1);
+
+  // y axis labels
+  svg.selectAll('.y-label')
+    .data(yTicks).enter()
+    .append('text')
+    .attr('x', pad.left - 6)
+    .attr('y', d => yScale(d) + 4)
+    .attr('text-anchor', 'end')
+    .attr('font-family', 'DM Mono, monospace')
+    .attr('font-size', 9)
+    .attr('fill', '#374151')
+    .text(d => d >= 1000 ? d.toFixed(0) : d.toFixed(1));
+
+  // x axis ticks (monthly)
+  const monthTicks = data.filter((d, i) => {
+    if (i === 0) return true;
+    return d.date.slice(8,10) === '01' || i === data.length - 1;
+  });
+
+  svg.selectAll('.x-label')
+    .data(monthTicks).enter()
+    .append('text')
+    .attr('x', d => xScale(d.date))
+    .attr('y', H - 6)
+    .attr('text-anchor', 'middle')
+    .attr('font-family', 'DM Mono, monospace')
+    .attr('font-size', 9)
+    .attr('fill', '#374151')
+    .text(d => {
+      const dt = new Date(d.date);
+      return dt.toLocaleDateString('en-US', {month:'short', year:'2-digit'});
+    });
+
+  // gradient fill
+  const gradId = 'grad_' + containerId;
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient')
+    .attr('id', gradId).attr('x1','0').attr('x2','0').attr('y1','0').attr('y2','1');
+  grad.append('stop').attr('offset','0%').attr('stop-color', color).attr('stop-opacity', 0.18);
+  grad.append('stop').attr('offset','100%').attr('stop-color', color).attr('stop-opacity', 0);
+
+  const area = d3.area()
+    .x(d => xScale(d.date))
+    .y0(H - pad.bottom)
+    .y1(d => yScale(d[key]))
+    .defined(d => d[key] != null)
+    .curve(d3.curveMonotoneX);
+
+  svg.append('path')
+    .datum(data)
+    .attr('fill', `url(#${gradId})`)
+    .attr('d', area);
+
+  // line
+  const line = d3.line()
+    .x(d => xScale(d.date))
+    .y(d => yScale(d[key]))
+    .defined(d => d[key] != null)
+    .curve(d3.curveMonotoneX);
+
+  svg.append('path')
+    .datum(data)
+    .attr('fill', 'none')
+    .attr('stroke', color)
+    .attr('stroke-width', 1.5)
+    .attr('d', line);
+
+  // last point dot
+  const lastValid = [...data].reverse().find(d => d[key] != null);
+  if (lastValid) {
+    svg.append('circle')
+      .attr('cx', xScale(lastValid.date))
+      .attr('cy', yScale(lastValid[key]))
+      .attr('r', 3)
+      .attr('fill', color);
+  }
+}
+
+function drawMiniChart(containerId, data, key, color) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+
+  const values = data.map(d => d[key]).filter(v => v != null);
+  if (values.length < 2) return;
+
+  const W = container.clientWidth || 220;
+  const H = 48;
+
+  const svg = d3.select(container).append('svg')
+    .attr('width', W).attr('height', H);
+
+  const xScale = d3.scalePoint()
+    .domain(data.map(d => d.date))
+    .range([0, W]);
+
+  const yScale = d3.scaleLinear()
+    .domain([d3.min(values) * 0.95, d3.max(values) * 1.05])
+    .range([H - 2, 2]);
+
+  const gradId = 'minigrad_' + containerId;
+  const defs = svg.append('defs');
+  const grad = defs.append('linearGradient')
+    .attr('id', gradId).attr('x1','0').attr('x2','0').attr('y1','0').attr('y2','1');
+  grad.append('stop').attr('offset','0%').attr('stop-color', color).attr('stop-opacity', 0.15);
+  grad.append('stop').attr('offset','100%').attr('stop-color', color).attr('stop-opacity', 0);
+
+  const area = d3.area()
+    .x(d => xScale(d.date)).y0(H).y1(d => yScale(d[key]))
+    .defined(d => d[key] != null).curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(data).attr('fill', `url(#${gradId})`).attr('d', area);
+
+  const line = d3.line()
+    .x(d => xScale(d.date)).y(d => yScale(d[key]))
+    .defined(d => d[key] != null).curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(data)
+    .attr('fill','none').attr('stroke', color).attr('stroke-width', 1.5).attr('d', line);
+}
+
+function updateTMChart() {
+  const filtered = filterByPeriod(allData, tmPeriod);
+  const key = 'Total Market (BSACS-TM)';
+  const color = SECTOR_COLOR_HEX[key];
+
+  drawLineChart('tm-chart', filtered, key, color, 220);
+
+  const vals = filtered.map(d => d[key]).filter(v => v != null);
+  const current = vals[vals.length-1];
+  const chg = pctChange(filtered, key);
+  const high = Math.max(...vals);
+  const low = Math.min(...vals);
+
+  document.getElementById('tm-current').textContent = current?.toFixed(2) ?? '—';
+  const chgEl = document.getElementById('tm-change');
+  chgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+  chgEl.className = 'stat-value ' + (chg >= 0 ? 'up' : 'down');
+  document.getElementById('tm-high').textContent = high?.toFixed(2) ?? '—';
+  document.getElementById('tm-low').textContent = low?.toFixed(2) ?? '—';
+
+  const lastDate = allData[allData.length-1]?.date ?? '';
+  document.getElementById('tm-source').textContent = `Source: Taostats API, as of ${lastDate}`;
+}
+
+function buildSectorGrid() {
+  const grid = document.getElementById('sector-grid');
+  grid.innerHTML = '';
+
+  SECTORS.forEach(sector => {
+    const color = SECTOR_COLOR_HEX[sector];
+    const vals = allData.map(d => d[sector]).filter(v => v != null);
+    const current = vals[vals.length-1];
+    const chg = pctChange(allData, sector);
+    const chgStr = (chg >= 0 ? '+' : '') + chg.toFixed(1) + '%';
+    const chgClass = chg >= 0 ? 'up' : 'down';
+
+    const card = document.createElement('div');
+    card.className = 'sector-card';
+    card.setAttribute('data-sector', sector);
+    card.innerHTML = `
+      <div class="sc-name">${sector}</div>
+      <div class="sc-metrics">
+        <div class="sc-level">${current?.toFixed(2) ?? '—'}</div>
+        <div class="sc-change ${chgClass}">${chgStr}</div>
+      </div>
+      <div class="sc-mini-chart" id="mini-${sector.replace(/[^a-z]/gi,'_')}"></div>
+      <div class="sc-inception">Base 1000 · Sep 4, 2025</div>
+    `;
+    grid.appendChild(card);
+
+    setTimeout(() => {
+      drawMiniChart(`mini-${sector.replace(/[^a-z]/gi,'_')}`, allData, sector, color);
+    }, 50);
+  });
+}
+
+// period toggle handlers
+document.getElementById('tm-toggle').addEventListener('click', e => {
+  const btn = e.target.closest('.period-btn');
+  if (!btn) return;
+  document.querySelectorAll('#tm-toggle .period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tmPeriod = btn.dataset.period;
+  updateTMChart();
+});
+
+// load data
+fetch('data.json')
+  .then(r => r.json())
+  .then(data => {
+    allData = data;
+    updateTMChart();
+    buildSectorGrid();
+  })
+  .catch(err => {
+    console.error('Failed to load data.json:', err);
+    document.getElementById('tm-source').textContent = 'Error loading data';
+  });
+
+window.addEventListener('resize', () => {
+  if (allData.length) {
+    updateTMChart();
+    buildSectorGrid();
+  }
+});
+</script>
+</body>
+</html>
