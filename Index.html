@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAO Sector Indexes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6f6f4;--surface:#fff;--border:#e2e2de;--border2:#c8c8c0;
+  --text:#181816;--mid:#48483e;--muted:#86867a;--faint:#b4b4a8;
+  --green:#176334;--green-bg:#e8f4ec;--red:#9e2020;--red-bg:#faeaea;--blue:#1e3a6e;
+  --ii:#3b6fd4;--ci:#1e9460;--dk:#b87010;--fi:#c83030;--aa:#7038c0;--cg:#c03080;--sv:#1888a0;--tm:#181816;
+}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.hdr{background:var(--text);height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 2rem}
+.hdr-brand{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+.hdr-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.05em}
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;overflow-x:auto}
+.nav a{font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;height:38px;display:flex;align-items:center;padding:0 1rem;border-bottom:2px solid transparent;white-space:nowrap;transition:color .1s,border-color .1s}
+.nav a:hover{color:var(--text)}
+.nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
+.wrap{max-width:1100px;margin:0 auto;padding:2rem}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);background:var(--border);gap:1px;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
+.stat{background:var(--surface);padding:14px 16px}
+.stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:400;color:var(--text);line-height:1}
+.stat-val.up{color:var(--green)}.stat-val.down{color:var(--red)}
+.stat-sub{font-size:10px;color:var(--faint);margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:3px;margin-bottom:1.5rem;overflow:hidden}
+.card-hdr{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:#fafaf8}
+.card-title{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--mid)}
+.card-meta{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);letter-spacing:.04em}
+.card-body{padding:18px}
+.pbrow{display:flex;align-items:center;gap:4px}
+.pblbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-right:6px}
+.pb{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:2px;cursor:pointer;letter-spacing:.05em;transition:all .1s}
+.pb:hover{background:var(--bg);color:var(--text)}
+.pb.active{background:var(--text);border-color:var(--text);color:#fff}
+.chart-area{width:100%;position:relative}
+.chart-area svg{display:block;width:100%;overflow:visible}
+.chart-src{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);margin-top:8px;letter-spacing:.04em}
+.tt{position:absolute;background:var(--text);color:#fff;padding:9px 13px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;pointer-events:none;opacity:0;transition:opacity .1s;white-space:nowrap;line-height:1.7;z-index:100;max-width:280px;white-space:normal}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mid);cursor:pointer;user-select:none;transition:opacity .15s;padding:3px 8px 3px 6px;border:1px solid var(--border);border-radius:2px;background:var(--bg)}
+.li:hover{border-color:var(--border2)}
+.li.hidden{opacity:.25}
+.li-sw{width:14px;height:3px;border-radius:1px;flex-shrink:0}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:right;padding:9px 14px;background:#fafaf8;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl th:first-child{text-align:left}
+.tbl td{padding:10px 14px;border-bottom:1px solid #f0f0ec;text-align:right;vertical-align:middle}
+.tbl td:first-child{text-align:left}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg)}
+.snc{display:flex;align-items:center;gap:8px;font-weight:500;color:var(--text)}
+.pip{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mid)}
+.bdg{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:2px;display:inline-block}
+.bdg-u{background:var(--green-bg);color:var(--green)}
+.bdg-d{background:var(--red-bg);color:var(--red)}
+/* HOLDINGS */
+.h-sec{border-bottom:1px solid var(--border)}
+.h-sec:last-child{border-bottom:none}
+.h-trg{width:100%;display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer;background:var(--surface);border:none;text-align:left;transition:background .1s;gap:12px}
+.h-trg:hover{background:var(--bg)}
+.h-tl{display:flex;align-items:center;gap:10px}
+.h-sname{font-weight:600;font-size:13px;color:var(--text)}
+.h-cnt{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);border:1px solid var(--border);padding:2px 7px;border-radius:2px;background:var(--bg)}
+.h-tr{display:flex;align-items:center;gap:14px}
+.h-perf{font-family:'IBM Plex Mono',monospace;font-size:11px}
+.h-chev{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--faint);transition:transform .2s}
+.h-sec.open .h-chev{transform:rotate(180deg)}
+.h-body{display:none;border-top:1px solid var(--border)}
+.h-sec.open .h-body{display:block}
+.h-def{padding:11px 18px;font-size:12px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border);font-style:italic;line-height:1.6}
+.htbl{width:100%;border-collapse:collapse;font-size:11px}
+.htbl th{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:left;padding:8px 18px;background:#fafaf8;border-bottom:1px solid var(--border);white-space:nowrap}
+.htbl td{padding:9px 18px;border-bottom:1px solid #f0f0ec;color:var(--mid);vertical-align:top;line-height:1.5}
+.htbl tr:last-child td{border-bottom:none}
+.htbl tr:hover td{background:var(--bg)}
+.h-id{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--faint);white-space:nowrap}
+.h-nm{font-weight:500;color:var(--text)}
+.h-rat{font-size:10px;color:var(--faint);margin-top:2px}
+/* HEATMAP */
+.heatmap-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.heatmap-wrap svg text{font-family:'IBM Plex Mono',monospace}
+/* METHODOLOGY */
+.mrow{display:flex;gap:16px;border-bottom:1px solid #f0f0ec;padding:11px 0;font-size:12px;line-height:1.6}
+.mrow:last-child{border-bottom:none}
+.mkey{width:220px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding-top:2px}
+.mval{color:var(--mid);font-weight:300}
+.mval strong{font-weight:500;color:var(--text)}
+.disc{font-size:10px;color:var(--faint);line-height:1.8;font-style:italic}
+footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:1rem}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.wrap{padding:1rem}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-brand">TAO Sector Indexes</div>
+  <div class="hdr-right" id="hd-date">Loading...</div>
+</div>
+<nav class="nav">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#tao">TAO Comparison</a>
+  <a href="#sectors">Sectors</a>
+  <a href="#holdings">Holdings</a>
+  <a href="#correlation">Correlation</a>
+  <a href="#methodology">Methodology</a>
+</nav>
+
+<div class="wrap">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-lbl">Bittensor Subnet Composite</div>
+      <div class="stat-val" id="s-tm">--</div>
+      <div class="stat-sub">Base 1000 · Oct 27, 2025</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Return Since Inception</div>
+      <div class="stat-val" id="s-ret">--</div>
+      <div class="stat-sub">Composite index</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">TAO / USD</div>
+      <div class="stat-val" id="s-tao">--</div>
+      <div class="stat-sub">Current price · Kraken</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">As Of</div>
+      <div class="stat-val" style="font-size:14px" id="s-date">--</div>
+      <div class="stat-sub">Taostats API</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Index Constituents</div>
+      <div class="stat-val" style="font-size:14px">64</div>
+      <div class="stat-sub">Across 7 sectors</div>
+    </div>
+  </div>
+
+  <!-- MAIN OVERLAY CHART -->
+  <div class="card" id="overview">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Bittensor Subnet Composite Index vs. Sector Indexes</div>
+        <div class="card-meta" id="main-chart-meta">Market cap-weighted · Loading...</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="pbrow" id="main-tog">
+          <span class="pblbl">Period</span>
+          <button class="pb" data-p="1W">1W</button>
+          <button class="pb" data-p="1M">1M</button>
+          <button class="pb active" data-p="ALL">ALL</button>
+        </div>
+        <div class="pbrow">
+          <span class="pblbl">Scale</span>
+          <button class="pb active" id="log-lin">Linear</button>
+          <button class="pb" id="log-log">Log</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body" style="position:relative">
+      <div class="legend" id="main-leg"></div>
+      <div class="chart-area" id="main-chart" style="height:320px"></div>
+      <div class="tt" id="tt1"></div>
+      <div class="chart-src" id="main-src"></div>
+    </div>
+  </div>
+
+  <!-- TAO COMPARISON CHART -->
+  <div class="card" id="tao">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Bittensor Subnet Composite Index vs. TAO/USD</div>
+        <div class="card-meta">Both series indexed to 1000 at inception Oct 27, 2025 · Subnets vs. raw TAO performance</div>
+      </div>
+      <div class="pbrow" id="tao-tog">
+        <span class="pblbl">Period</span>
+        <button class="pb" data-p="1W">1W</button>
+        <button class="pb" data-p="1M">1M</button>
+        <button class="pb active" data-p="ALL">ALL</button>
+      </div>
+    </div>
+    <div class="card-body" style="position:relative">
+      <div class="chart-area" id="tao-chart" style="height:260px"></div>
+      <div class="tt" id="tt2"></div>
+      <div class="chart-src" id="tao-src"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);background:var(--border);gap:1px;border-top:1px solid var(--border)">
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Composite Index</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-idx">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px" id="tao-detail-idx-ret">Since inception</div>
+      </div>
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">TAO / USD</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-price">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px" id="tao-detail-tao-ret">Since inception</div>
+      </div>
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Subnet Total Mkt Cap</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-mcap">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px">64 classified subnets</div>
+      </div>
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Composite vs TAO</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-spread">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px">Index outperformance</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTOR TABLE -->
+  <div class="card" id="sectors">
+    <div class="card-hdr">
+      <div class="card-title">Sector Index Performance Summary</div>
+      <div class="card-meta">All periods measured from Index Inception Date of October 27, 2025</div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Sector</th>
+            <th>Index Level</th>
+            <th>Since Inception</th>
+            <th>1-Month</th>
+            <th>1-Week</th>
+            <th>Inception High</th>
+            <th>Inception Low</th>
+            <th style="width:88px">Trend</th>
+          </tr>
+        </thead>
+        <tbody id="sec-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HOLDINGS -->
+  <div class="card" id="holdings">
+    <div class="card-hdr">
+      <div class="card-title">Index Constituents</div>
+      <div class="card-meta">Select any sector to view constituent subnets and classification basis</div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="h-list"></div>
+    </div>
+  </div>
+
+  <!-- SECTOR CORRELATION HEATMAP -->
+  <div class="card" id="correlation">
+    <div class="card-hdr">
+      <div class="card-title">Sector Return Correlation Matrix</div>
+      <div class="card-meta">30-day trailing daily returns · Green = high positive correlation · Red = negative correlation</div>
+    </div>
+    <div class="card-body">
+      <div class="heatmap-wrap" id="sector-heatmap"></div>
+    </div>
+  </div>
+
+  <!-- SUBNET CORRELATION HEATMAP -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Constituent Subnet Return Correlation Matrix</div>
+      <div class="card-meta">30-day trailing daily returns · All classified subnets plus TAO/USD · Hover for values</div>
+    </div>
+    <div class="card-body">
+      <div class="heatmap-wrap" id="subnet-heatmap"></div>
+    </div>
+  </div>
+
+  <!-- METHODOLOGY -->
+  <div class="card" id="methodology">
+    <div class="card-hdr">
+      <div class="card-title">Index Methodology</div>
+      <div class="card-meta">Version 1.0</div>
+    </div>
+    <div class="card-body">
+      <div class="mrow"><div class="mkey">Index Family</div><div class="mval">Eight indexes: the <strong>Bittensor Subnet Composite Index</strong>, a market capitalization-weighted composite of all classified subnets, and seven sector indexes corresponding to each defined Sector in the classification taxonomy. The Composite Index serves as the primary benchmark for the Bittensor subnet ecosystem.</div></div>
+      <div class="mrow"><div class="mkey">Index Inception Date</div><div class="mval">October 27, 2025. All indexes are initialized at a base value of <strong>1000.00</strong> on the Index Inception Date.</div></div>
+      <div class="mrow"><div class="mkey">Index Calculation</div><div class="mval">Each index is calculated as follows:<br><br><strong>Index(t) = Index(t-1) x [sum over i of w(i,t-1) x (P(i,t) / P(i,t-1))]</strong><br><br>where <em>i</em> denotes each eligible constituent, <em>w(i,t-1)</em> is the prior-day market capitalization weight of constituent <em>i</em>, and <em>P(i,t)</em> and <em>P(i,t-1)</em> are the USD-denominated prices of constituent <em>i</em> on days <em>t</em> and <em>t-1</em>, respectively.</div></div>
+      <div class="mrow"><div class="mkey">Weighting Methodology</div><div class="mval">Market capitalization-weighted. Daily weights are computed as:<br><br><strong>w(i,t-1) = MarketCap(i,t-1) / sum over j of MarketCap(j,t-1)</strong><br><br>where the denominator sums prior-day market capitalizations across all eligible constituents within the applicable index. Weights are recalculated each calendar day. No constituent weight caps are applied in the current methodology version.</div></div>
+      <div class="mrow"><div class="mkey">Rebalancing</div><div class="mval">Continuous daily rebalancing. Constituent weights are recalculated each day using prior-day market capitalization data. There is no fixed periodic reconstitution schedule.</div></div>
+      <div class="mrow"><div class="mkey">New Constituent Rule</div><div class="mval">A newly eligible constituent receives a weight of zero (0.00) on its first day of inclusion and enters the index at full market capitalization weight beginning on its second day of inclusion. This treatment prevents index level distortion arising from first-day price anomalies.</div></div>
+      <div class="mrow"><div class="mkey">Constituent Eligibility</div><div class="mval">To be eligible for inclusion, a subnet must satisfy all of the following criteria: (1) the subnet must be actively registered on the Bittensor mainnet (Finney), (2) the subnet must have a verified public description available in the Taostats subnets-infos registry (github.com/taostat/subnets-infos), and (3) the subnet must have a determinable primary function that maps to one of the seven defined Sectors. Subnets that do not satisfy criteria (2) or (3) are designated Unclassified and are excluded from all indexes.</div></div>
+      <div class="mrow"><div class="mkey">Permanent Exclusions</div><div class="mval">Subnet 0 (the Root Network) is permanently excluded from all indexes. The Root Network is a governance and emission-allocation subnet and does not function as an investable AI application subnet.</div></div>
+      <div class="mrow"><div class="mkey">Classification Taxonomy</div><div class="mval">Constituents are classified according to a proprietary three-tier taxonomy: <strong>Sector, Industry Group, and Industry</strong>. Classification is based on the primary economic function of the subnet, defined as the principal output or service the subnet is designed to produce. A subnet is assigned one primary classification. Where a subnet has a material secondary function, an optional secondary classification may be assigned; secondary classifications do not affect index membership or weighting.</div></div>
+      <div class="mrow"><div class="mkey">Price and Market Cap Data</div><div class="mval">USD-denominated price and market capitalization data are sourced from the Taostats Pool API (api.taostats.io/api/dtao/pool). Prices reflect the automated market maker (AMM) price derived from each subnet's on-chain TAO/alpha liquidity pool, converted to USD using the TAO/USD rate at time of data pull. TAO/USD reference rates used in the TAO comparison series are sourced from Kraken (api.kraken.com). Subnet description and registry data are sourced from the Taostats subnets-infos registry (github.com/taostat/subnets-infos).</div></div>
+      <div class="mrow"><div class="mkey">Data Frequency</div><div class="mval">Index levels are calculated on a daily basis using end-of-day price and market capitalization snapshots. The index series reflects one observation per calendar day per index.</div></div>
+      <div class="mrow"><div class="mkey">Sector Definitions</div><div class="mval">
+        <strong>Intelligence and Inference:</strong> Subnets whose primary output is a delivered AI model response, including language model inference, multimodal inference, image or video generation, model evaluation, and model training outputs.<br><br>
+        <strong>Compute and Infrastructure:</strong> Subnets that provide foundational computational resources, including distributed GPU compute, model training infrastructure, and network node operation. These subnets do not produce AI outputs directly.<br><br>
+        <strong>Data and Knowledge:</strong> Subnets focused on the collection, storage, indexing, retrieval, or distribution of structured data assets for use by downstream AI systems or subnets.<br><br>
+        <strong>Finance and DeFi:</strong> Subnets generating financial products and services, including quantitative trading signals, price forecasting models, yield optimization strategies, and prediction market infrastructure.<br><br>
+        <strong>Agents and Applications:</strong> Subnets deploying autonomous AI agents that execute real-world tasks end-to-end, or building end-user applications that consume inference and data subnet outputs. This sector has no direct analogue in traditional digital asset classification standards.<br><br>
+        <strong>Culture and Gaming:</strong> Subnets generating creative AI content, including roleplay, 3D asset generation, audio and speech synthesis, and AI-native entertainment experiences.<br><br>
+        <strong>Security and Verification:</strong> Subnets providing AI-powered security and verification services, including cybersecurity testing, AI-generated content detection, code vulnerability analysis, and private network infrastructure. This sector has no direct analogue in traditional digital asset classification standards.
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <p class="disc">This index is a data and informational index only. It is provided for general informational and analytical purposes and does not constitute investment advice, financial advice, a recommendation, or an offer or solicitation to buy or sell any security, digital asset, or other financial instrument. The index is not an investable product, does not represent an actual or hypothetical investment portfolio, and cannot be invested in directly. Any references to index performance are based on historical or calculated data and do not reflect the performance of any account, product, or strategy. The index provider does not act as an investment adviser, broker-dealer, commodity trading advisor, or fiduciary, and does not provide trading, brokerage, custody, or portfolio management services. The index is calculated using third-party data sources believed to be reliable; however, the index provider makes no representation or warranty as to the accuracy, completeness, or timeliness of the data or the index. Past performance is not indicative of future results.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>TAO Sector Indexes</span>
+  <span>Data: Taostats API · Kraken · github.com/taostat/subnets-infos</span>
+</footer>
+
+<script>
+const TM = 'Total Market (BSACS-TM)';
+const TM_LBL = 'Bittensor Subnet Composite';
+const SECTORS = ['Intelligence & Inference','Compute & Infrastructure','Data & Knowledge',
+  'Finance & DeFi','Agents & Applications','Culture & Gaming','Security & Verification'];
+const COLORS = {
+  'Intelligence & Inference':'#3b6fd4','Compute & Infrastructure':'#1e9460',
+  'Data & Knowledge':'#b87010','Finance & DeFi':'#c83030',
+  'Agents & Applications':'#7038c0','Culture & Gaming':'#c03080',
+  'Security & Verification':'#1888a0',[TM]:'#181816','TAO/USD':'#8a8a7a'
+};
+const DEFS = {
+  'Intelligence & Inference':'Subnets whose primary output is a delivered AI model response, including language model inference, multimodal inference, image or video generation, model evaluation, and model training outputs.',
+  'Compute & Infrastructure':'Subnets providing foundational computational resources including distributed GPU compute, model training infrastructure, and network node operation. These subnets do not produce AI outputs directly.',
+  'Data & Knowledge':'Subnets focused on the collection, storage, indexing, retrieval, or distribution of structured data assets for use by downstream AI systems or subnets.',
+  'Finance & DeFi':'Subnets generating financial products and services including quantitative trading signals, price forecasting models, yield optimization strategies, and prediction market infrastructure.',
+  'Agents & Applications':'Subnets deploying autonomous AI agents that execute real-world tasks end-to-end, or building end-user applications that consume inference and data subnet outputs.',
+  'Culture & Gaming':'Subnets generating creative AI content including roleplay, 3D asset generation, audio and speech synthesis, and AI-native entertainment experiences.',
+  'Security & Verification':'Subnets providing AI-powered security and verification services including cybersecurity testing, AI-generated content detection, code vulnerability analysis, and private network infrastructure.'
+};
+const HOLDINGS = {
+  'Intelligence & Inference':[
+    {id:'SN1',name:'Apex',rat:'Incentive mechanism for distributed conversational AI. Classification basis: primary output is language model inference delivered as a service.'},
+    {id:'SN2',name:'Omron',rat:'Cryptographically verified AI inference network. Classification basis: primary output is verifiable model inference.'},
+    {id:'SN9',name:'Pretraining',rat:'Rewards miners for producing pretrained foundation models on the Falcon Refined Web dataset. Classification basis: primary output is trained model weights.'},
+    {id:'SN15',name:'De-Val',rat:'Decentralized LLM evaluation and benchmarking platform. Classification basis: primary output is model performance scores.'},
+    {id:'SN18',name:'Cortex.t',rat:'Dual-purpose AI platform delivering text and image responses via API. Classification basis: primary output is language and image model inference.'},
+    {id:'SN19',name:'Nineteen',rat:'Inference at scale with focus on image generation and manipulation. Classification basis: primary output is multimodal AI inference.'},
+    {id:'SN21',name:'Omega Any-to-Any',rat:'Decentralized any-to-any multimodal AI. Classification basis: primary output is cross-modal model inference.'},
+    {id:'SN23',name:'SocialTensor',rat:'Decentralized image generation network. Classification basis: primary output is AI-generated images.'},
+    {id:'SN37',name:'Finetuning',rat:'Rewards miners for fine-tuning large language models. Classification basis: primary output is fine-tuned model weights.'},
+    {id:'SN43',name:'Graphite',rat:'Decentralized AI network for graph optimization. Classification basis: primary output is AI-derived graph solutions.'},
+    {id:'SN47',name:'Condense AI',rat:'Accelerates inference by compressing long natural language sequences. Classification basis: primary output is compressed AI inference.'},
+    {id:'SN49',name:'Hivetrain',rat:'Collaborative platform for decentralized deep learning automation. Classification basis: primary output is trained model weights via distributed AutoML.'},
+    {id:'SN68',name:'Nova',rat:'Decentralized drug discovery platform using ML. Classification basis: primary output is AI-driven scientific research outputs.'},
+  ],
+  'Compute & Infrastructure':[
+    {id:'SN3',name:'Templar',rat:'Coordinates distributed training infrastructure across global compute. Completed Covenant-72B in March 2026, the largest decentralized LLM pretraining run on record (72B parameters, 1.1T tokens). Classification basis: primary function is distributed training infrastructure provision.'},
+    {id:'SN4',name:'Targon',rat:'Decentralized GPU compute marketplace operated by Manifold Labs. $10.5M Series A, 1,500+ H200 nodes, 20B+ inference tokens served daily. Classification basis: primary function is GPU compute provision.'},
+    {id:'SN7',name:'SubVortex',rat:'Decentralized network of subtensor nodes. Classification basis: primary function is protocol-level network node operation.'},
+    {id:'SN27',name:'NI Compute',rat:'Transforms distributed GPU resources into a tradeable compute commodity. Classification basis: primary function is GPU compute marketplace.'},
+    {id:'SN29',name:'Coldint',rat:'Collaborative distributed incentivized training. Classification basis: primary function is distributed training infrastructure.'},
+    {id:'SN38',name:'Distributed Training',rat:'Incentivizes miners to provide compute and bandwidth for model training. Classification basis: primary function is distributed training infrastructure.'},
+    {id:'SN39',name:'EdgeMaxxing',rat:'Optimizes AI models for consumer and edge devices. Classification basis: primary function is edge device compute optimization.'},
+    {id:'SN51',name:'Compute Subnet',rat:'Decentralized peer-to-peer GPU rental marketplace. Classification basis: primary function is GPU compute provision.'},
+    {id:'SN56',name:'Gradients',rat:'Permissionless distributed model training. Classification basis: primary function is distributed training infrastructure.'},
+    {id:'SN64',name:'Chutes',rat:'Serverless AI compute for running any AI model. Classification basis: primary function is GPU compute provision.'},
+  ],
+  'Data & Knowledge':[
+    {id:'SN5',name:'Open Kaito',rat:'Democratizes access to Web3 information via decentralized data collection and indexing. Classification basis: primary output is structured Web3 data.'},
+    {id:'SN13',name:'Data Universe',rat:'Collects and stores large amounts of data from web sources for use by other subnets. Classification basis: primary output is structured web data for downstream AI use.'},
+    {id:'SN14',name:'VectorStore',rat:'Decentralized network for storing and retrieving vector embeddings. Classification basis: primary output is vector data for AI retrieval applications.'},
+    {id:'SN22',name:'Desearch',rat:'AI-powered search engine built on Bittensor. Classification basis: primary output is ranked search results.'},
+    {id:'SN24',name:'Omega',rat:'Creates a large-scale decentralized multimodal dataset for AI research. Classification basis: primary output is multimodal training data.'},
+    {id:'SN33',name:'ReadyAI',rat:'Enables structured data processing at scale. Classification basis: primary output is structured data assets.'},
+    {id:'SN40',name:'Chunking',rat:'Advances Retrieval-Augmented Generation through decentralized chunking and embedding. Classification basis: primary output is chunked and embedded text for RAG applications.'},
+    {id:'SN42',name:'Masa',rat:'Provides real-time structured data for AI agents. Classification basis: primary output is real-time structured data.'},
+    {id:'SN52',name:'Dojo',rat:'Crowdsources high-quality human-generated datasets. Classification basis: primary output is human-labeled training data.'},
+    {id:'SN57',name:'Gaia',rat:'Hub of geospatial AI on Bittensor. Classification basis: primary output is geospatial data.'},
+    {id:'SN66',name:'FakeNews',rat:'Real-time misinformation detection. Classification basis: primary output is misinformation detection data.'},
+  ],
+  'Finance & DeFi':[
+    {id:'SN6',name:'Infinite Games',rat:'Incentivizes prediction of future events. Classification basis: primary output is event prediction data.'},
+    {id:'SN8',name:'PTN (Vanta)',rat:'Aggregates quant and ML trading signals across crypto and forex. $30M+ annual reward pool. Classification basis: primary output is trading signals.'},
+    {id:'SN10',name:'Sturdy',rat:'Decentralized autonomous yield optimizers. Classification basis: primary output is yield optimization strategies.'},
+    {id:'SN30',name:'Bettensor',rat:'Decentralized sports prediction subnet. Classification basis: primary output is sports prediction data.'},
+    {id:'SN41',name:'Sportstensor',rat:'Decentralized sports prediction using advanced analytics. Classification basis: primary output is sports prediction signals.'},
+    {id:'SN44',name:'Score',rat:'Sports intelligence via decentralized computer vision. Classification basis: primary output is sports analytics data.'},
+    {id:'SN48',name:'Nextplace AI',rat:'Decentralizes real estate market intelligence. Classification basis: primary output is housing price forecasting data.'},
+    {id:'SN50',name:'Synth',rat:'Decentralized cryptocurrency price forecasting. Classification basis: primary output is synthetic price forecasting data.'},
+    {id:'SN53',name:'Efficient Frontier',rat:'Identifies optimal risk-weighted trading strategies. Classification basis: primary output is risk-adjusted trading signals.'},
+    {id:'SN55',name:'Precog',rat:'High-frequency BTC price forecasting. Classification basis: primary output is cryptocurrency price forecasting data.'},
+  ],
+  'Agents & Applications':[
+    {id:'SN16',name:'BitAds',rat:'Decentralized pay-per-conversion advertising platform. Classification basis: primary function is application-layer ad delivery.'},
+    {id:'SN20',name:'BitAgent',rat:'Integrates LLM-powered agents to automate task management. Classification basis: primary output is autonomous task completion.'},
+    {id:'SN36',name:'Web Agents',rat:'Incentivizes web-capable AI agents via the Infinite Web Arena benchmark. Classification basis: primary output is autonomous web task completion.'},
+    {id:'SN45',name:'SWE-Rizzo',rat:'Decentralized code generation and software engineering agents. Classification basis: primary output is AI-generated code.'},
+    {id:'SN54',name:'WebGenieAI',rat:'AI-powered web development automation subnet. Classification basis: primary output is automated web development outputs.'},
+    {id:'SN59',name:'Agent Arena',rat:'First competitive agent ecosystem on Bittensor. Agents compete in structured market environments. Classification basis: primary function is competitive multi-agent system operation.'},
+    {id:'SN62',name:'AgenTao',rat:'Decentralized marketplace for AI agent services. Classification basis: primary function is AI agent service delivery.'},
+    {id:'SN71',name:'LeadPoet',rat:'Autonomous AI agents sourcing and qualifying B2B sales leads. Classification basis: primary output is AI-qualified sales lead data.'},
+  ],
+  'Culture & Gaming':[
+    {id:'SN11',name:'Dippy Roleplay',rat:'Creates the world\'s best open-source roleplay LLM via collective open-source effort. Classification basis: primary output is character-based dialogue and roleplay AI.'},
+    {id:'SN17',name:'Three Gen',rat:'AI-native game generation: assets, voice, and sound generated at runtime. Classification basis: primary output is 3D and game content generation.'},
+    {id:'SN46',name:'Neural3D',rat:'Decentralized world building on Bittensor. Classification basis: primary output is 3D asset and world generation.'},
+    {id:'SN58',name:'Dippy Speech',rat:'Advanced open-source speech model development. Classification basis: primary output is AI-synthesized speech.'},
+  ],
+  'Security & Verification':[
+    {id:'SN32',name:"It's AI",rat:'Detects AI-generated content across text formats. Classification basis: primary output is AI content detection data.'},
+    {id:'SN34',name:'BitMind',rat:'Identifies AI-generated images using decentralized AI models. Classification basis: primary output is AI-generated media detection data.'},
+    {id:'SN60',name:'Bitsec',rat:'AI-powered code vulnerability detection ecosystem. Classification basis: primary output is code security analysis.'},
+    {id:'SN61',name:'Red Team',rat:'Decentralized adversarial AI testing and red teaming. Classification basis: primary output is AI system vulnerability assessments.'},
+    {id:'SN65',name:'TAO Private Network',rat:'Decentralized private and secure network infrastructure. Classification basis: primary function is privacy-preserving network infrastructure provision.'},
+  ],
+};
+
+let allData=[], corrData=null, mainPer='ALL', taoPer='ALL';
+const hidden=new Set();
+
+function fp(data,p){
+  if(p==='ALL')return data;
+  const last=new Date(data[data.length-1].date);
+  const cut=new Date(last);
+  if(p==='1W')cut.setDate(cut.getDate()-7);
+  if(p==='1M')cut.setMonth(cut.getMonth()-1);
+  return data.filter(d=>new Date(d.date)>=cut);
+}
+function pct(data,key,p){
+  const d=fp(data,p);
+  const v=d.map(x=>x[key]).filter(x=>x!=null);
+  if(v.length<2)return null;
+  return((v[v.length-1]/v[0])-1)*100;
+}
+function fp2(n){if(n==null)return'--';return(n>=0?'+':'')+n.toFixed(2)+'%'}
+function bdg(n){if(n==null)return'<span style="color:var(--faint)">--</span>';return`<span class="bdg ${n>=0?'bdg-u':'bdg-d'}">${fp2(n)}</span>`}
+
+// ── CHART UTILS ──
+let logScale = false;
+
+function makeChart(el, data, series, height, ttId, showBaseLine, rebase) {
+  el.innerHTML='';
+  const W=el.clientWidth||900, H=height;
+  const pad={top:16,right:16,bottom:32,left:54};
+  // rebase series to 1000 at start of period if requested
+  const plotData = rebase ? data.map((d,i) => {
+    const rebased = {...d};
+    series.forEach(({key}) => {
+      const first = data.find(r => r[key] != null);
+      if (first && first[key] && d[key] != null) rebased[key] = (d[key] / first[key]) * 1000;
+    });
+    return rebased;
+  }) : data;
+  const allV=series.flatMap(s=>plotData.map(d=>d[s.key]).filter(v=>v!=null&&v>0));
+  if(!allV.length)return;
+  const svg=d3.select(el).append('svg').attr('width',W).attr('height',H);
+  const x=d3.scalePoint().domain(plotData.map(d=>d.date)).range([pad.left,W-pad.right]);
+  const yFn = logScale ? d3.scaleLog() : d3.scaleLinear();
+  const yMin = logScale ? d3.min(allV)*0.95 : d3.min(allV)*.97;
+  const y = yFn.domain([yMin, d3.max(allV)*1.03]).range([H-pad.bottom,pad.top]);
+  const yt=y.ticks(5);
+  svg.selectAll('.yg').data(yt).enter().append('line')
+    .attr('x1',pad.left).attr('x2',W-pad.right)
+    .attr('y1',d=>y(d)).attr('y2',d=>y(d))
+    .attr('stroke','#ebebeb').attr('stroke-width',1);
+  svg.selectAll('.yl').data(yt).enter().append('text')
+    .attr('x',pad.left-7).attr('y',d=>y(d)+4).attr('text-anchor','end')
+    .attr('font-family','IBM Plex Mono,monospace').attr('font-size',9).attr('fill','#b4b4a8')
+    .text(d=>d.toFixed(0));
+  if(showBaseLine&&y.domain()[0]<1000&&y.domain()[1]>1000){
+    svg.append('line').attr('x1',pad.left).attr('x2',W-pad.right)
+      .attr('y1',y(1000)).attr('y2',y(1000))
+      .attr('stroke','#d0d0c8').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+  }
+  const xt=data.filter((d,i)=>i===0||i===data.length-1||d.date.slice(8)==='01');
+  svg.selectAll('.xl').data(xt).enter().append('text')
+    .attr('x',d=>x(d.date)).attr('y',H-8).attr('text-anchor','middle')
+    .attr('font-family','IBM Plex Mono,monospace').attr('font-size',9).attr('fill','#b4b4a8')
+    .text(d=>{const dt=new Date(d.date);return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'})});
+  series.forEach(({key,color,width,dash})=>{
+    const ln=d3.line().x(d=>x(d.date)).y(d=>y(d[key])).defined(d=>d[key]!=null&&d[key]>0).curve(d3.curveMonotoneX);
+    svg.append('path').datum(plotData).attr('fill','none').attr('stroke',color)
+      .attr('stroke-width',width||1.5).attr('stroke-dasharray',dash||'none').attr('d',ln);
+  });
+  // hover
+  const ttEl=document.getElementById(ttId);
+  svg.append('rect').attr('x',pad.left).attr('y',pad.top)
+    .attr('width',W-pad.left-pad.right).attr('height',H-pad.top-pad.bottom)
+    .attr('fill','transparent')
+    .on('mousemove',function(e){
+      const [mx]=d3.pointer(e);
+      const bw=(W-pad.left-pad.right)/(plotData.length-1||1);
+      const idx=Math.max(0,Math.min(plotData.length-1,Math.round((mx-pad.left)/bw)));
+      const row=plotData[idx]; if(!row)return;
+      let html=`<b>${row.date}</b>`;
+      series.forEach(({key,label})=>{html+=`<br>${label}: ${row[key]?.toFixed(2)??'--'}`});
+      ttEl.innerHTML=html; ttEl.style.opacity='1';
+      const r=el.getBoundingClientRect();
+      ttEl.style.left=(e.clientX-r.left+14)+'px';
+      ttEl.style.top=(e.clientY-r.top-10)+'px';
+    })
+    .on('mouseleave',()=>{ttEl.style.opacity='0'});
+}
+
+function drawMainChart(){
+  const el=document.getElementById('main-chart');
+  const data=fp(allData,mainPer);
+  const rebase = mainPer !== 'ALL';
+  const series=[
+    {key:TM,label:TM_LBL,color:COLORS[TM],width:2.5},
+    ...SECTORS.filter(s=>!hidden.has(s)).map(s=>({key:s,label:s,color:COLORS[s],width:1.5}))
+  ];
+  makeChart(el,data,series,320,'tt1',true,rebase);
+  const last = allData[allData.length-1];
+  const first = data[0];
+  const meta = document.getElementById('main-chart-meta');
+  if (meta) {
+    if (mainPer === 'ALL') {
+      meta.textContent = `Market cap-weighted · All 8 indexes indexed to 1000 on Index Inception Date of Oct 27, 2025 · Click legend to show/hide`;
+    } else {
+      const periodLabel = mainPer === '1W' ? '1-week' : '1-month';
+      meta.textContent = `Market cap-weighted · ${periodLabel} view · All series rebased to 1000 on ${first?.date} · Performance shown relative to that date · Click legend to show/hide`;
+    }
+  }
+  document.getElementById('main-src').textContent=`Source: Taostats API · As of ${last?.date}`;
+}
+
+function drawTaoChart(){
+  const el=document.getElementById('tao-chart');
+  const rebase = taoPer !== 'ALL';
+  const data=fp(allData,taoPer).map(d=>({...d,'TAO/USD':d.tao_indexed}));
+  const series=[
+    {key:TM,label:TM_LBL,color:COLORS[TM],width:2.5},
+    {key:'TAO/USD',label:'TAO/USD (indexed)',color:'#9090a0',width:1.5,dash:'5,3'},
+  ];
+  makeChart(el,data,series,260,'tt2',true,rebase);
+  const last=allData[allData.length-1];
+  const tmRet=pct(allData,TM,'ALL');
+  const taoRetAll=((last?.tao_indexed/1000)-1)*100;
+  document.getElementById('tao-src').textContent=
+    `Source: Taostats API, Kraken · As of ${last?.date}`;
+  // detail strip
+  const idxEl=document.getElementById('tao-detail-idx');
+  const idxRetEl=document.getElementById('tao-detail-idx-ret');
+  const priceEl=document.getElementById('tao-detail-price');
+  const taoRetEl=document.getElementById('tao-detail-tao-ret');
+  const mcapEl=document.getElementById('tao-detail-mcap');
+  const spreadEl=document.getElementById('tao-detail-spread');
+  if(idxEl){
+    const cur=last?.[TM]; idxEl.textContent=cur?.toFixed(2)??'--';
+    idxRetEl.textContent=fp2(tmRet)+' since inception';
+    idxRetEl.style.color=tmRet>=0?'var(--green)':'var(--red)';
+  }
+  if(priceEl){
+    priceEl.textContent=last?.tao_price?'$'+last.tao_price.toFixed(2):'--';
+    taoRetEl.textContent=fp2(taoRetAll)+' since inception';
+    taoRetEl.style.color=taoRetAll>=0?'var(--green)':'var(--red)';
+  }
+  if(mcapEl&&last?.tao_price){
+    // estimate total classified subnet mcap from the composite index movement
+    // we dont have raw mcap in data.json so note it
+    mcapEl.textContent='See Taostats';
+    mcapEl.style.fontSize='12px';
+  }
+  if(spreadEl){
+    const spread=tmRet-taoRetAll;
+    spreadEl.textContent=fp2(spread);
+    spreadEl.style.color=spread>=0?'var(--green)':'var(--red)';
+  }
+}
+
+function buildLegend(){
+  const leg=document.getElementById('main-leg');
+  leg.innerHTML='';
+  [[TM,TM_LBL],...SECTORS.map(s=>[s,s])].forEach(([key,lbl])=>{
+    const el=document.createElement('div');
+    el.className='li'; el.dataset.key=key;
+    el.innerHTML=`<div class="li-sw" style="background:${COLORS[key]}"></div>${lbl}`;
+    el.addEventListener('click',()=>{
+      if(hidden.has(key))hidden.delete(key); else hidden.add(key);
+      el.classList.toggle('hidden',hidden.has(key));
+      drawMainChart();
+    });
+    leg.appendChild(el);
+  });
+}
+
+function drawSpark(cid,data,key,color){
+  const el=document.getElementById(cid); if(!el)return; el.innerHTML='';
+  const v=data.map(d=>d[key]).filter(x=>x!=null); if(v.length<2)return;
+  const W=84,H=28;
+  const svg=d3.select(el).append('svg').attr('width',W).attr('height',H);
+  const xs=d3.scaleLinear().domain([0,data.length-1]).range([0,W]);
+  const ys=d3.scaleLinear().domain([d3.min(v),d3.max(v)]).range([H-1,1]);
+  const ln=d3.line().x((d,i)=>xs(i)).y(d=>ys(d[key])).defined(d=>d[key]!=null).curve(d3.curveMonotoneX);
+  svg.append('path').datum(data).attr('fill','none').attr('stroke',color).attr('stroke-width',1.5).attr('d',ln);
+}
+
+function buildTable(){
+  const tb=document.getElementById('sec-tbody'); tb.innerHTML='';
+  SECTORS.forEach(s=>{
+    const c=COLORS[s];
+    const v=allData.map(d=>d[s]).filter(x=>x!=null);
+    const cur=v[v.length-1], hi=Math.max(...v), lo=Math.min(...v);
+    const pi=pct(allData,s,'ALL'), p1m=pct(allData,s,'1M'), p1w=pct(allData,s,'1W');
+    const sid='spk_'+s.replace(/[^a-z]/gi,'_');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><div class="snc"><div class="pip" style="background:${c}"></div>${s}</div></td>
+      <td class="mono">${cur?.toFixed(2)??'--'}</td>
+      <td>${bdg(pi)}</td><td>${bdg(p1m)}</td><td>${bdg(p1w)}</td>
+      <td class="mono">${hi?.toFixed(2)??'--'}</td>
+      <td class="mono">${lo?.toFixed(2)??'--'}</td>
+      <td id="${sid}"></td>`;
+    tb.appendChild(tr);
+    setTimeout(()=>drawSpark(sid,allData,s,c),50);
+  });
+}
+
+function buildHoldings(){
+  const list=document.getElementById('h-list'); list.innerHTML='';
+  SECTORS.forEach(s=>{
+    const c=COLORS[s], h=HOLDINGS[s]||[];
+    const pi=pct(allData,s,'ALL');
+    const perfHtml=pi!=null?`<span class="h-perf" style="color:${pi>=0?'var(--green)':'var(--red)'}">${fp2(pi)} since inception</span>`:'';
+    const sec=document.createElement('div'); sec.className='h-sec';
+    sec.innerHTML=`
+      <button class="h-trg">
+        <div class="h-tl"><div class="pip" style="background:${c}"></div><span class="h-sname">${s}</span><span class="h-cnt">${h.length} constituents</span></div>
+        <div class="h-tr">${perfHtml}<span class="h-chev">&#9650;</span></div>
+      </button>
+      <div class="h-body">
+        <div class="h-def">${DEFS[s]}</div>
+        <table class="htbl">
+          <thead><tr><th>Subnet</th><th>Name</th><th>Classification Basis</th></tr></thead>
+          <tbody>${h.map(x=>`<tr><td><span class="h-id">${x.id}</span></td><td><div class="h-nm">${x.name}</div></td><td><div class="h-rat">${x.rat}</div></td></tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    sec.querySelector('.h-trg').addEventListener('click',()=>sec.classList.toggle('open'));
+    list.appendChild(sec);
+  });
+}
+
+// ── HEATMAP ──
+function drawHeatmap(containerId, labels, matrix, cellSize, sectors) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+
+  const n = labels.length;
+  const cs = cellSize || Math.max(14, Math.min(28, Math.floor(700 / n)));
+  const labelW = 90;
+  const W = labelW + n * cs + 20;
+  const H = labelW + n * cs + 20;
+
+  const svg = d3.select(el).append('svg')
+    .attr('width', W).attr('height', H);
+
+  // color scale: red (-1) -> white (0) -> green (1)
+  const colorScale = d3.scaleLinear()
+    .domain([-1, 0, 1])
+    .range(['#c83030', '#ffffff', '#1e9460'])
+    .clamp(true);
+
+  // column labels (rotated)
+  svg.selectAll('.clbl').data(labels).enter()
+    .append('text')
+    .attr('x', (d, i) => labelW + i * cs + cs / 2)
+    .attr('y', labelW - 4)
+    .attr('text-anchor', 'start')
+    .attr('transform', (d, i) => `rotate(-45, ${labelW + i * cs + cs / 2}, ${labelW - 4})`)
+    .attr('font-family', 'IBM Plex Mono, monospace')
+    .attr('font-size', Math.min(10, cs - 2))
+    .attr('fill', '#86867a')
+    .text(d => d.length > 12 ? d.slice(0, 12) : d);
+
+  // row labels
+  svg.selectAll('.rlbl').data(labels).enter()
+    .append('text')
+    .attr('x', labelW - 4)
+    .attr('y', (d, i) => labelW + i * cs + cs / 2 + 4)
+    .attr('text-anchor', 'end')
+    .attr('font-family', 'IBM Plex Mono, monospace')
+    .attr('font-size', Math.min(10, cs - 2))
+    .attr('fill', '#86867a')
+    .text(d => d.length > 14 ? d.slice(0, 14) : d);
+
+  // sector colors for grouping
+  const SECTOR_COLORS_HM = {
+    'Intelligence & Inference':'#3b6fd4','Compute & Infrastructure':'#1e9460',
+    'Data & Knowledge':'#b87010','Finance & DeFi':'#c83030',
+    'Agents & Applications':'#7038c0','Culture & Gaming':'#c03080',
+    'Security & Verification':'#1888a0','TAO/USD':'#8a8a7a','':"#cccccc"
+  };
+
+  // draw sector group bands if sectors provided
+  if (sectors && sectors.length) {
+    // group consecutive same-sector items
+    let groups = [];
+    let cur = {sector: sectors[0], start: 0, end: 0};
+    for (let i = 1; i < sectors.length; i++) {
+      if (sectors[i] === cur.sector) { cur.end = i; }
+      else { groups.push({...cur}); cur = {sector: sectors[i], start: i, end: i}; }
+    }
+    groups.push(cur);
+
+    groups.forEach(g => {
+      const color = SECTOR_COLORS_HM[g.sector] || '#cccccc';
+      const x0 = labelW + g.start * cs;
+      const x1 = labelW + (g.end + 1) * cs;
+      const bandW = x1 - x0;
+      // top band
+      svg.append('rect').attr('x', x0).attr('y', labelW - 3)
+        .attr('width', bandW - 1).attr('height', 3)
+        .attr('fill', color).attr('opacity', 0.7);
+      // left band
+      svg.append('rect').attr('x', labelW - 3).attr('y', labelW + g.start * cs)
+        .attr('width', 3).attr('height', bandW - 1)
+        .attr('fill', color).attr('opacity', 0.7);
+    });
+  }
+
+  // cells
+  const tt = d3.select('body').append('div')
+    .style('position', 'fixed')
+    .style('background', '#181816')
+    .style('color', '#fff')
+    .style('padding', '7px 11px')
+    .style('border-radius', '3px')
+    .style('font-family', 'IBM Plex Mono, monospace')
+    .style('font-size', '10px')
+    .style('pointer-events', 'none')
+    .style('opacity', 0)
+    .style('z-index', 200)
+    .style('line-height', 1.6);
+
+  matrix.forEach((row, i) => {
+    row.forEach((val, j) => {
+      const g = svg.append('g')
+        .attr('transform', `translate(${labelW + j * cs}, ${labelW + i * cs})`);
+
+      g.append('rect')
+        .attr('width', cs - 1)
+        .attr('height', cs - 1)
+        .attr('fill', val === null ? '#f0f0ec' : colorScale(val))
+        .attr('opacity', i === j ? 1 : 0.85)
+        .on('mouseover', function(e) {
+          if (i !== j) {
+            const s1 = sectors ? sectors[i] : '';
+            const s2 = sectors ? sectors[j] : '';
+            const sLine = (s1 && s2 && s1 !== s2) ? `<br><span style="color:#b4b4a8">${s1} vs ${s2}</span>` : '';
+            tt.html(`<b>${labels[i]}</b><br>${labels[j]}${sLine}<br>r = ${val?.toFixed(3) ?? 'n/a'}`)
+              .style('opacity', 1);
+          }
+        })
+        .on('mousemove', function(e) {
+          tt.style('left', (e.clientX + 14) + 'px').style('top', (e.clientY - 10) + 'px');
+        })
+        .on('mouseleave', () => tt.style('opacity', 0));
+
+      // show value in cell if big enough
+      if (cs >= 22 && val !== null && i !== j) {
+        g.append('text')
+          .attr('x', (cs - 1) / 2).attr('y', (cs - 1) / 2 + 3)
+          .attr('text-anchor', 'middle')
+          .attr('font-family', 'IBM Plex Mono, monospace')
+          .attr('font-size', Math.min(8, cs - 8))
+          .attr('fill', Math.abs(val) > 0.5 ? '#fff' : '#666')
+          .text(val.toFixed(2));
+      }
+    });
+  });
+
+  // color legend
+  const lgW = 120, lgH = 10;
+  const lgX = W - lgW - 10, lgY = 4;
+  const lgGrad = svg.append('defs').append('linearGradient')
+    .attr('id', `lg-${containerId}`).attr('x1', '0%').attr('x2', '100%');
+  lgGrad.append('stop').attr('offset', '0%').attr('stop-color', '#c83030');
+  lgGrad.append('stop').attr('offset', '50%').attr('stop-color', '#ffffff');
+  lgGrad.append('stop').attr('offset', '100%').attr('stop-color', '#1e9460');
+  svg.append('rect').attr('x', lgX).attr('y', lgY).attr('width', lgW).attr('height', lgH)
+    .attr('fill', `url(#lg-${containerId})`).attr('stroke', '#e2e2de').attr('stroke-width', 0.5);
+  ['-1.0','0','1.0'].forEach((lbl, i) => {
+    svg.append('text').attr('x', lgX + i * lgW / 2).attr('y', lgY + lgH + 10)
+      .attr('text-anchor', 'middle').attr('font-family', 'IBM Plex Mono, monospace')
+      .attr('font-size', 8).attr('fill', '#b4b4a8').text(lbl);
+  });
+}
+
+function buildHeatmaps() {
+  if (!corrData) return;
+
+  // SECTOR HEATMAP
+  const sLabels = corrData.sector_ids.map(s => s.replace('All Subnet Index', 'Composite'));
+  drawHeatmap('sector-heatmap', sLabels, corrData.sector_corr, 52);
+
+  // SUBNET HEATMAP
+  const subLabels = corrData.subnet_ids.map(id => corrData.subnet_labels[id] || id);
+  const subSectors = corrData.subnet_ids.map(id => corrData.subnet_sectors[id] || 'TAO/USD');
+  drawHeatmap('subnet-heatmap', subLabels, corrData.subnet_corr, 16, subSectors);
+}
+
+function updateStats(){
+  const tm=allData.map(d=>d[TM]).filter(x=>x!=null);
+  const cur=tm[tm.length-1];
+  const ret=((cur/1000)-1)*100;
+  const last=allData[allData.length-1];
+  const taoRet=last?.tao_indexed ? ((last.tao_indexed/1000)-1)*100 : null;
+  document.getElementById('s-tm').textContent=cur?.toFixed(2)??'--';
+  const re=document.getElementById('s-ret');
+  re.textContent=fp2(ret); re.className='stat-val '+(ret>=0?'up':'down');
+  const te=document.getElementById('s-tao');
+  const taoPrice=last?.tao_price;
+  te.textContent=taoPrice!=null?'$'+taoPrice.toFixed(2):'--';
+  te.className='stat-val';
+  document.getElementById('s-date').textContent=last?.date??'--';
+  document.getElementById('hd-date').textContent=`As of ${last?.date??'--'}`;
+}
+
+// TOGGLES
+document.getElementById('main-tog').addEventListener('click',e=>{
+  const b=e.target.closest('.pb'); if(!b)return;
+  document.querySelectorAll('#main-tog .pb').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); mainPer=b.dataset.p; drawMainChart();
+});
+document.getElementById('tao-tog').addEventListener('click',e=>{
+  const b=e.target.closest('.pb'); if(!b)return;
+  document.querySelectorAll('#tao-tog .pb').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); taoPer=b.dataset.p; drawTaoChart();
+});
+
+// LOG SCALE TOGGLE
+document.getElementById('log-lin').addEventListener('click',()=>{
+  logScale=false;
+  document.getElementById('log-lin').classList.add('active');
+  document.getElementById('log-log').classList.remove('active');
+  drawMainChart();
+});
+document.getElementById('log-log').addEventListener('click',()=>{
+  logScale=true;
+  document.getElementById('log-log').classList.add('active');
+  document.getElementById('log-lin').classList.remove('active');
+  drawMainChart();
+});
+
+// LOAD
+Promise.all([
+  fetch('data.json').then(r=>r.json()),
+  fetch('correlation_data.json').then(r=>r.json()).catch(()=>null)
+]).then(([data, corr]) => {
+  allData = data;
+  corrData = corr;
+  updateStats();
+  buildLegend();
+  drawMainChart();
+  drawTaoChart();
+  buildTable();
+  buildHoldings();
+  buildHeatmaps();
+}).catch(e => console.error('Failed to load data:', e));
+
+window.addEventListener('resize', () => {
+  if (!allData.length) return;
+  drawMainChart(); drawTaoChart();
+  SECTORS.forEach(s => drawSpark('spk_'+s.replace(/[^a-z]/gi,'_'), allData, s, COLORS[s]));
+});
+</script>
+</body>
+</html>
