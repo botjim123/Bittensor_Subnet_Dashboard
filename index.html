@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0046)file:///Users/andrewram/Downloads/index_5.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TAO Sector Indexes</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./index_files/css2" rel="stylesheet">
+<script src="./index_files/d3.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -106,12 +106,12 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
   <div class="hdr-right" id="hd-date">Loading...</div>
 </div>
 <nav class="nav">
-  <a href="#overview" class="active">Overview</a>
-  <a href="#tao">TAO Comparison</a>
-  <a href="#sectors">Sectors</a>
-  <a href="#holdings">Holdings</a>
-  <a href="#correlation">Correlation</a>
-  <a href="#methodology">Methodology</a>
+  <a href="file:///Users/andrewram/Downloads/index_5.html#overview" class="active">Overview</a>
+  <a href="file:///Users/andrewram/Downloads/index_5.html#tao">TAO Comparison</a>
+  <a href="file:///Users/andrewram/Downloads/index_5.html#sectors">Sectors</a>
+  <a href="file:///Users/andrewram/Downloads/index_5.html#holdings">Holdings</a>
+  <a href="file:///Users/andrewram/Downloads/index_5.html#correlation">Correlation</a>
+  <a href="file:///Users/andrewram/Downloads/index_5.html#methodology">Methodology</a>
 </nav>
 
 <div class="wrap">
@@ -128,9 +128,9 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
       <div class="stat-sub">Composite index</div>
     </div>
     <div class="stat">
-      <div class="stat-lbl">TAO Since Inception</div>
+      <div class="stat-lbl">TAO / USD</div>
       <div class="stat-val" id="s-tao">--</div>
-      <div class="stat-sub">TAO/USD indexed to 1000</div>
+      <div class="stat-sub">Current price · Kraken</div>
     </div>
     <div class="stat">
       <div class="stat-lbl">As Of</div>
@@ -149,13 +149,20 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
     <div class="card-hdr">
       <div>
         <div class="card-title">Bittensor Subnet Composite Index vs. Sector Indexes</div>
-        <div class="card-meta">Market cap-weighted · Indexed to 1000 at inception Oct 27, 2025 · Click legend to toggle</div>
+        <div class="card-meta" id="main-chart-meta">Market cap-weighted · Loading...</div>
       </div>
-      <div class="pbrow" id="main-tog">
-        <span class="pblbl">Period</span>
-        <button class="pb" data-p="1W">1W</button>
-        <button class="pb" data-p="1M">1M</button>
-        <button class="pb active" data-p="ALL">ALL</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="pbrow" id="main-tog">
+          <span class="pblbl">Period</span>
+          <button class="pb" data-p="1W">1W</button>
+          <button class="pb" data-p="1M">1M</button>
+          <button class="pb active" data-p="ALL">ALL</button>
+        </div>
+        <div class="pbrow">
+          <span class="pblbl">Scale</span>
+          <button class="pb active" id="log-lin">Linear</button>
+          <button class="pb" id="log-log">Log</button>
+        </div>
       </div>
     </div>
     <div class="card-body" style="position:relative">
@@ -184,6 +191,28 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
       <div class="chart-area" id="tao-chart" style="height:260px"></div>
       <div class="tt" id="tt2"></div>
       <div class="chart-src" id="tao-src"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);background:var(--border);gap:1px;border-top:1px solid var(--border)">
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Composite Index</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-idx">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px" id="tao-detail-idx-ret">Since inception</div>
+      </div>
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">TAO / USD</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-price">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px" id="tao-detail-tao-ret">Since inception</div>
+      </div>
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Subnet Total Mkt Cap</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-mcap">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px">64 classified subnets</div>
+      </div>
+      <div style="background:var(--surface);padding:12px 16px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Composite vs TAO</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-spread">--</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px">Index outperformance</div>
+      </div>
     </div>
   </div>
 
@@ -407,15 +436,28 @@ function fp2(n){if(n==null)return'--';return(n>=0?'+':'')+n.toFixed(2)+'%'}
 function bdg(n){if(n==null)return'<span style="color:var(--faint)">--</span>';return`<span class="bdg ${n>=0?'bdg-u':'bdg-d'}">${fp2(n)}</span>`}
 
 // ── CHART UTILS ──
-function makeChart(el, data, series, height, ttId, showBaseLine) {
+let logScale = false;
+
+function makeChart(el, data, series, height, ttId, showBaseLine, rebase) {
   el.innerHTML='';
   const W=el.clientWidth||900, H=height;
   const pad={top:16,right:16,bottom:32,left:54};
-  const allV=series.flatMap(s=>data.map(d=>d[s.key]).filter(v=>v!=null));
+  // rebase series to 1000 at start of period if requested
+  const plotData = rebase ? data.map((d,i) => {
+    const rebased = {...d};
+    series.forEach(({key}) => {
+      const first = data.find(r => r[key] != null);
+      if (first && first[key] && d[key] != null) rebased[key] = (d[key] / first[key]) * 1000;
+    });
+    return rebased;
+  }) : data;
+  const allV=series.flatMap(s=>plotData.map(d=>d[s.key]).filter(v=>v!=null&&v>0));
   if(!allV.length)return;
   const svg=d3.select(el).append('svg').attr('width',W).attr('height',H);
-  const x=d3.scalePoint().domain(data.map(d=>d.date)).range([pad.left,W-pad.right]);
-  const y=d3.scaleLinear().domain([d3.min(allV)*.97,d3.max(allV)*1.03]).range([H-pad.bottom,pad.top]);
+  const x=d3.scalePoint().domain(plotData.map(d=>d.date)).range([pad.left,W-pad.right]);
+  const yFn = logScale ? d3.scaleLog() : d3.scaleLinear();
+  const yMin = logScale ? d3.min(allV)*0.95 : d3.min(allV)*.97;
+  const y = yFn.domain([yMin, d3.max(allV)*1.03]).range([H-pad.bottom,pad.top]);
   const yt=y.ticks(5);
   svg.selectAll('.yg').data(yt).enter().append('line')
     .attr('x1',pad.left).attr('x2',W-pad.right)
@@ -436,8 +478,8 @@ function makeChart(el, data, series, height, ttId, showBaseLine) {
     .attr('font-family','IBM Plex Mono,monospace').attr('font-size',9).attr('fill','#b4b4a8')
     .text(d=>{const dt=new Date(d.date);return dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'})});
   series.forEach(({key,color,width,dash})=>{
-    const ln=d3.line().x(d=>x(d.date)).y(d=>y(d[key])).defined(d=>d[key]!=null).curve(d3.curveMonotoneX);
-    svg.append('path').datum(data).attr('fill','none').attr('stroke',color)
+    const ln=d3.line().x(d=>x(d.date)).y(d=>y(d[key])).defined(d=>d[key]!=null&&d[key]>0).curve(d3.curveMonotoneX);
+    svg.append('path').datum(plotData).attr('fill','none').attr('stroke',color)
       .attr('stroke-width',width||1.5).attr('stroke-dasharray',dash||'none').attr('d',ln);
   });
   // hover
@@ -447,9 +489,9 @@ function makeChart(el, data, series, height, ttId, showBaseLine) {
     .attr('fill','transparent')
     .on('mousemove',function(e){
       const [mx]=d3.pointer(e);
-      const bw=(W-pad.left-pad.right)/(data.length-1||1);
-      const idx=Math.max(0,Math.min(data.length-1,Math.round((mx-pad.left)/bw)));
-      const row=data[idx]; if(!row)return;
+      const bw=(W-pad.left-pad.right)/(plotData.length-1||1);
+      const idx=Math.max(0,Math.min(plotData.length-1,Math.round((mx-pad.left)/bw)));
+      const row=plotData[idx]; if(!row)return;
       let html=`<b>${row.date}</b>`;
       series.forEach(({key,label})=>{html+=`<br>${label}: ${row[key]?.toFixed(2)??'--'}`});
       ttEl.innerHTML=html; ttEl.style.opacity='1';
@@ -463,26 +505,68 @@ function makeChart(el, data, series, height, ttId, showBaseLine) {
 function drawMainChart(){
   const el=document.getElementById('main-chart');
   const data=fp(allData,mainPer);
+  const rebase = mainPer !== 'ALL';
   const series=[
     {key:TM,label:TM_LBL,color:COLORS[TM],width:2.5},
     ...SECTORS.filter(s=>!hidden.has(s)).map(s=>({key:s,label:s,color:COLORS[s],width:1.5}))
   ];
-  makeChart(el,data,series,320,'tt1',true);
-  document.getElementById('main-src').textContent=`Source: Taostats API · As of ${allData[allData.length-1]?.date}`;
+  makeChart(el,data,series,320,'tt1',true,rebase);
+  const last = allData[allData.length-1];
+  const first = data[0];
+  const meta = document.getElementById('main-chart-meta');
+  if (meta) {
+    if (mainPer === 'ALL') {
+      meta.textContent = `Market cap-weighted · All 8 indexes indexed to 1000 on Index Inception Date of Oct 27, 2025 · Click legend to show/hide`;
+    } else {
+      const periodLabel = mainPer === '1W' ? '1-week' : '1-month';
+      meta.textContent = `Market cap-weighted · ${periodLabel} view · All series rebased to 1000 on ${first?.date} · Performance shown relative to that date · Click legend to show/hide`;
+    }
+  }
+  document.getElementById('main-src').textContent=`Source: Taostats API · As of ${last?.date}`;
 }
 
 function drawTaoChart(){
   const el=document.getElementById('tao-chart');
+  const rebase = taoPer !== 'ALL';
   const data=fp(allData,taoPer).map(d=>({...d,'TAO/USD':d.tao_indexed}));
   const series=[
     {key:TM,label:TM_LBL,color:COLORS[TM],width:2.5},
     {key:'TAO/USD',label:'TAO/USD (indexed)',color:'#9090a0',width:1.5,dash:'5,3'},
   ];
-  makeChart(el,data,series,260,'tt2',true);
-  const tmRet=pct(allData,TM,'ALL'), taoRet=pct(allData.map(d=>({...d,'tao_indexed':d.tao_indexed})),'tao_indexed','ALL');
+  makeChart(el,data,series,260,'tt2',true,rebase);
   const last=allData[allData.length-1];
+  const tmRet=pct(allData,TM,'ALL');
+  const taoRetAll=((last?.tao_indexed/1000)-1)*100;
   document.getElementById('tao-src').textContent=
-    `Composite: ${fp2(tmRet)} since inception · TAO/USD: ${fp2(((last?.tao_indexed/1000)-1)*100)} since inception · Source: Taostats API, Kraken · As of ${last?.date}`;
+    `Source: Taostats API, Kraken · As of ${last?.date}`;
+  // detail strip
+  const idxEl=document.getElementById('tao-detail-idx');
+  const idxRetEl=document.getElementById('tao-detail-idx-ret');
+  const priceEl=document.getElementById('tao-detail-price');
+  const taoRetEl=document.getElementById('tao-detail-tao-ret');
+  const mcapEl=document.getElementById('tao-detail-mcap');
+  const spreadEl=document.getElementById('tao-detail-spread');
+  if(idxEl){
+    const cur=last?.[TM]; idxEl.textContent=cur?.toFixed(2)??'--';
+    idxRetEl.textContent=fp2(tmRet)+' since inception';
+    idxRetEl.style.color=tmRet>=0?'var(--green)':'var(--red)';
+  }
+  if(priceEl){
+    priceEl.textContent=last?.tao_price?'$'+last.tao_price.toFixed(2):'--';
+    taoRetEl.textContent=fp2(taoRetAll)+' since inception';
+    taoRetEl.style.color=taoRetAll>=0?'var(--green)':'var(--red)';
+  }
+  if(mcapEl&&last?.tao_price){
+    // estimate total classified subnet mcap from the composite index movement
+    // we dont have raw mcap in data.json so note it
+    mcapEl.textContent='See Taostats';
+    mcapEl.style.fontSize='12px';
+  }
+  if(spreadEl){
+    const spread=tmRet-taoRetAll;
+    spreadEl.textContent=fp2(spread);
+    spreadEl.style.color=spread>=0?'var(--green)':'var(--red)';
+  }
 }
 
 function buildLegend(){
@@ -558,7 +642,7 @@ function buildHoldings(){
 }
 
 // ── HEATMAP ──
-function drawHeatmap(containerId, labels, matrix, cellSize) {
+function drawHeatmap(containerId, labels, matrix, cellSize, sectors) {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = '';
@@ -601,6 +685,41 @@ function drawHeatmap(containerId, labels, matrix, cellSize) {
     .attr('fill', '#86867a')
     .text(d => d.length > 14 ? d.slice(0, 14) : d);
 
+  // sector colors for grouping
+  const SECTOR_COLORS_HM = {
+    'Intelligence & Inference':'#3b6fd4','Compute & Infrastructure':'#1e9460',
+    'Data & Knowledge':'#b87010','Finance & DeFi':'#c83030',
+    'Agents & Applications':'#7038c0','Culture & Gaming':'#c03080',
+    'Security & Verification':'#1888a0','TAO/USD':'#8a8a7a','':"#cccccc"
+  };
+
+  // draw sector group bands if sectors provided
+  if (sectors && sectors.length) {
+    // group consecutive same-sector items
+    let groups = [];
+    let cur = {sector: sectors[0], start: 0, end: 0};
+    for (let i = 1; i < sectors.length; i++) {
+      if (sectors[i] === cur.sector) { cur.end = i; }
+      else { groups.push({...cur}); cur = {sector: sectors[i], start: i, end: i}; }
+    }
+    groups.push(cur);
+
+    groups.forEach(g => {
+      const color = SECTOR_COLORS_HM[g.sector] || '#cccccc';
+      const x0 = labelW + g.start * cs;
+      const x1 = labelW + (g.end + 1) * cs;
+      const bandW = x1 - x0;
+      // top band
+      svg.append('rect').attr('x', x0).attr('y', labelW - 3)
+        .attr('width', bandW - 1).attr('height', 3)
+        .attr('fill', color).attr('opacity', 0.7);
+      // left band
+      svg.append('rect').attr('x', labelW - 3).attr('y', labelW + g.start * cs)
+        .attr('width', 3).attr('height', bandW - 1)
+        .attr('fill', color).attr('opacity', 0.7);
+    });
+  }
+
   // cells
   const tt = d3.select('body').append('div')
     .style('position', 'fixed')
@@ -627,7 +746,10 @@ function drawHeatmap(containerId, labels, matrix, cellSize) {
         .attr('opacity', i === j ? 1 : 0.85)
         .on('mouseover', function(e) {
           if (i !== j) {
-            tt.html(`<b>${labels[i]}</b><br>${labels[j]}<br>r = ${val?.toFixed(3) ?? 'n/a'}`)
+            const s1 = sectors ? sectors[i] : '';
+            const s2 = sectors ? sectors[j] : '';
+            const sLine = (s1 && s2 && s1 !== s2) ? `<br><span style="color:#b4b4a8">${s1} vs ${s2}</span>` : '';
+            tt.html(`<b>${labels[i]}</b><br>${labels[j]}${sLine}<br>r = ${val?.toFixed(3) ?? 'n/a'}`)
               .style('opacity', 1);
           }
         })
@@ -675,7 +797,8 @@ function buildHeatmaps() {
 
   // SUBNET HEATMAP
   const subLabels = corrData.subnet_ids.map(id => corrData.subnet_labels[id] || id);
-  drawHeatmap('subnet-heatmap', subLabels, corrData.subnet_corr, 16);
+  const subSectors = corrData.subnet_ids.map(id => corrData.subnet_sectors[id] || 'TAO/USD');
+  drawHeatmap('subnet-heatmap', subLabels, corrData.subnet_corr, 16, subSectors);
 }
 
 function updateStats(){
@@ -688,8 +811,9 @@ function updateStats(){
   const re=document.getElementById('s-ret');
   re.textContent=fp2(ret); re.className='stat-val '+(ret>=0?'up':'down');
   const te=document.getElementById('s-tao');
-  te.textContent=taoRet!=null?fp2(taoRet):'--';
-  te.className='stat-val '+(taoRet>=0?'up':'down');
+  const taoPrice=last?.tao_price;
+  te.textContent=taoPrice!=null?'$'+taoPrice.toFixed(2):'--';
+  te.className='stat-val';
   document.getElementById('s-date').textContent=last?.date??'--';
   document.getElementById('hd-date').textContent=`As of ${last?.date??'--'}`;
 }
@@ -704,6 +828,20 @@ document.getElementById('tao-tog').addEventListener('click',e=>{
   const b=e.target.closest('.pb'); if(!b)return;
   document.querySelectorAll('#tao-tog .pb').forEach(x=>x.classList.remove('active'));
   b.classList.add('active'); taoPer=b.dataset.p; drawTaoChart();
+});
+
+// LOG SCALE TOGGLE
+document.getElementById('log-lin').addEventListener('click',()=>{
+  logScale=false;
+  document.getElementById('log-lin').classList.add('active');
+  document.getElementById('log-log').classList.remove('active');
+  drawMainChart();
+});
+document.getElementById('log-log').addEventListener('click',()=>{
+  logScale=true;
+  document.getElementById('log-log').classList.add('active');
+  document.getElementById('log-lin').classList.remove('active');
+  drawMainChart();
 });
 
 // LOAD
@@ -728,5 +866,6 @@ window.addEventListener('resize', () => {
   SECTORS.forEach(s => drawSpark('spk_'+s.replace(/[^a-z]/gi,'_'), allData, s, COLORS[s]));
 });
 </script>
-</body>
-</html>
+
+
+</body></html>
