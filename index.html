@@ -24,7 +24,7 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .nav a:hover{color:var(--text)}
 .nav a.active{color:var(--blue);border-bottom-color:var(--blue)}
 .wrap{max-width:1100px;margin:0 auto;padding:2rem}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);background:var(--border);gap:1px;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);background:var(--border);gap:1px;border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:1.5rem}
 .stat{background:var(--surface);padding:14px 16px}
 .stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
 .stat-val{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:400;color:var(--text);line-height:1}
@@ -118,7 +118,7 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
 
   <div class="stats">
     <div class="stat">
-      <div class="stat-lbl">Bittensor Subnet Composite</div>
+      <div class="stat-lbl">Bittensor Classified Subnet Index</div>
       <div class="stat-val" id="s-tm">--</div>
       <div class="stat-sub">Base 1000 · Oct 27, 2025</div>
     </div>
@@ -139,8 +139,13 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
     </div>
     <div class="stat">
       <div class="stat-lbl">Index Constituents</div>
-      <div class="stat-val" style="font-size:14px">64</div>
-      <div class="stat-sub">Across 7 sectors</div>
+      <div class="stat-val" style="font-size:14px">64 / 129</div>
+      <div class="stat-sub">Classified of active subnets</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lbl">Classified Subnet Mkt Cap</div>
+      <div class="stat-val" style="font-size:14px" id="s-mcap">--</div>
+      <div class="stat-sub">64 classified subnets</div>
     </div>
   </div>
 
@@ -148,7 +153,7 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
   <div class="card" id="overview">
     <div class="card-hdr">
       <div>
-        <div class="card-title">Bittensor Subnet Composite Index vs. Sector Indexes</div>
+        <div class="card-title">Bittensor Classified Subnet Index vs. Sector Indexes</div>
         <div class="card-meta" id="main-chart-meta">Market cap-weighted · Loading...</div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -177,7 +182,7 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
   <div class="card" id="tao">
     <div class="card-hdr">
       <div>
-        <div class="card-title">Bittensor Subnet Composite Index vs. TAO/USD</div>
+        <div class="card-title">Bittensor Classified Subnet Index vs. TAO/USD</div>
         <div class="card-meta">Both series indexed to 1000 at inception Oct 27, 2025 · Subnets vs. raw TAO performance</div>
       </div>
       <div class="pbrow" id="tao-tog">
@@ -201,12 +206,12 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
       <div style="background:var(--surface);padding:12px 16px">
         <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">TAO / USD</div>
         <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-price">--</div>
-        <div style="font-size:10px;color:var(--faint);margin-top:2px" id="tao-detail-tao-ret">Since inception</div>
+        <div style="font-size:10px;margin-top:2px" id="tao-detail-tao-ret">--</div>
       </div>
       <div style="background:var(--surface);padding:12px 16px">
-        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Subnet Total Mkt Cap</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Subnet Mkt Cap</div>
         <div style="font-family:IBM Plex Mono,monospace;font-size:16px;color:var(--text)" id="tao-detail-mcap">--</div>
-        <div style="font-size:10px;color:var(--faint);margin-top:2px">64 classified subnets</div>
+        <div style="font-size:10px;margin-top:2px" id="tao-detail-mcap-sub">--</div>
       </div>
       <div style="background:var(--surface);padding:12px 16px">
         <div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Composite vs TAO</div>
@@ -281,7 +286,7 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
       <div class="card-meta">Version 1.0</div>
     </div>
     <div class="card-body">
-      <div class="mrow"><div class="mkey">Index Family</div><div class="mval">Eight indexes: the <strong>Bittensor Subnet Composite Index</strong>, a market capitalization-weighted composite of all classified subnets, and seven sector indexes corresponding to each defined Sector in the classification taxonomy. The Composite Index serves as the primary benchmark for the Bittensor subnet ecosystem.</div></div>
+      <div class="mrow"><div class="mkey">Index Family</div><div class="mval">Eight indexes: the <strong>Bittensor Classified Subnet Index</strong>, a market capitalization-weighted composite of all classified subnets, and seven sector indexes corresponding to each defined Sector in the classification taxonomy. The Composite Index serves as the primary benchmark for the Bittensor subnet ecosystem.</div></div>
       <div class="mrow"><div class="mkey">Index Inception Date</div><div class="mval">October 27, 2025. All indexes are initialized at a base value of <strong>1000.00</strong> on the Index Inception Date.</div></div>
       <div class="mrow"><div class="mkey">Index Calculation</div><div class="mval">Each index is calculated as follows:<br><br><strong>Index(t) = Index(t-1) x [sum over i of w(i,t-1) x (P(i,t) / P(i,t-1))]</strong><br><br>where <em>i</em> denotes each eligible constituent, <em>w(i,t-1)</em> is the prior-day market capitalization weight of constituent <em>i</em>, and <em>P(i,t)</em> and <em>P(i,t-1)</em> are the USD-denominated prices of constituent <em>i</em> on days <em>t</em> and <em>t-1</em>, respectively.</div></div>
       <div class="mrow"><div class="mkey">Weighting Methodology</div><div class="mval">Market capitalization-weighted. Daily weights are computed as:<br><br><strong>w(i,t-1) = MarketCap(i,t-1) / sum over j of MarketCap(j,t-1)</strong><br><br>where the denominator sums prior-day market capitalizations across all eligible constituents within the applicable index. Weights are recalculated each calendar day. No constituent weight caps are applied in the current methodology version.</div></div>
@@ -319,7 +324,7 @@ footer{background:var(--text);color:rgba(255,255,255,.25);padding:14px 2rem;font
 
 <script>
 const TM = 'Total Market (BSACS-TM)';
-const TM_LBL = 'Bittensor Subnet Composite';
+const TM_LBL = 'Bittensor Classified Subnet Index';
 const SECTORS = ['Intelligence & Inference','Compute & Infrastructure','Data & Knowledge',
   'Finance & DeFi','Agents & Applications','Culture & Gaming','Security & Verification'];
 const COLORS = {
@@ -438,7 +443,7 @@ function bdg(n){if(n==null)return'<span style="color:var(--faint)">--</span>';re
 // ── CHART UTILS ──
 let logScale = false;
 
-function makeChart(el, data, series, height, ttId, showBaseLine, rebase) {
+function makeChart(el, data, series, height, ttId, showBaseLine, rebase, showMeta) {
   el.innerHTML='';
   const W=el.clientWidth||900, H=height;
   const pad={top:16,right:16,bottom:32,left:54};
@@ -456,8 +461,11 @@ function makeChart(el, data, series, height, ttId, showBaseLine, rebase) {
   const svg=d3.select(el).append('svg').attr('width',W).attr('height',H);
   const x=d3.scalePoint().domain(plotData.map(d=>d.date)).range([pad.left,W-pad.right]);
   const yFn = logScale ? d3.scaleLog() : d3.scaleLinear();
-  const yMin = logScale ? d3.min(allV)*0.95 : d3.min(allV)*.97;
-  const y = yFn.domain([yMin, d3.max(allV)*1.03]).range([H-pad.bottom,pad.top]);
+  const minV = d3.min(allV);
+  const maxV = d3.max(allV);
+  const yMin = logScale ? Math.max(minV * 0.95, 1) : minV * 0.97;
+  const yMax = logScale ? maxV * 1.05 : maxV * 1.03;
+  const y = yFn.domain([yMin, yMax]).range([H-pad.bottom,pad.top]).nice();
   const yt=y.ticks(5);
   svg.selectAll('.yg').data(yt).enter().append('line')
     .attr('x1',pad.left).attr('x2',W-pad.right)
@@ -466,7 +474,7 @@ function makeChart(el, data, series, height, ttId, showBaseLine, rebase) {
   svg.selectAll('.yl').data(yt).enter().append('text')
     .attr('x',pad.left-7).attr('y',d=>y(d)+4).attr('text-anchor','end')
     .attr('font-family','IBM Plex Mono,monospace').attr('font-size',9).attr('fill','#b4b4a8')
-    .text(d=>d.toFixed(0));
+    .text(d=>d>=1000?d.toFixed(0):d>=100?d.toFixed(0):d.toFixed(1));
   if(showBaseLine&&y.domain()[0]<1000&&y.domain()[1]>1000){
     svg.append('line').attr('x1',pad.left).attr('x2',W-pad.right)
       .attr('y1',y(1000)).attr('y2',y(1000))
@@ -494,6 +502,10 @@ function makeChart(el, data, series, height, ttId, showBaseLine, rebase) {
       const row=plotData[idx]; if(!row)return;
       let html=`<b>${row.date}</b>`;
       series.forEach(({key,label})=>{html+=`<br>${label}: ${row[key]?.toFixed(2)??'--'}`});
+      if(showMeta){
+        if(row._tao_price!=null) html+=`<br>TAO price: $${row._tao_price.toFixed(2)}`;
+        if(row._mcap!=null){const m=row._mcap;html+=`<br>Subnet mkt cap: ${m>=1e9?'$'+(m/1e9).toFixed(2)+'B':'$'+(m/1e6).toFixed(0)+'M'}`;}
+      }
       ttEl.innerHTML=html; ttEl.style.opacity='1';
       const r=el.getBoundingClientRect();
       ttEl.style.left=(e.clientX-r.left+14)+'px';
@@ -533,7 +545,12 @@ function drawTaoChart(){
     {key:TM,label:TM_LBL,color:COLORS[TM],width:2.5},
     {key:'TAO/USD',label:'TAO/USD (indexed)',color:'#9090a0',width:1.5,dash:'5,3'},
   ];
-  makeChart(el,data,series,260,'tt2',true,rebase);
+  // add mcap and tao_price to plot data for tooltip
+  const dataWithMeta = data.map(d => {
+    const orig = allData.find(r => r.date === d.date) || {};
+    return {...d, _mcap: orig.total_mcap_usd, _tao_price: orig.tao_price};
+  });
+  makeChart(el,dataWithMeta,series,260,'tt2',true,rebase,true);
   const last=allData[allData.length-1];
   const tmRet=pct(allData,TM,'ALL');
   const taoRetAll=((last?.tao_indexed/1000)-1)*100;
@@ -553,14 +570,21 @@ function drawTaoChart(){
   }
   if(priceEl){
     priceEl.textContent=last?.tao_price?'$'+last.tao_price.toFixed(2):'--';
-    taoRetEl.textContent=fp2(taoRetAll)+' since inception';
-    taoRetEl.style.color=taoRetAll>=0?'var(--green)':'var(--red)';
+    const taoChg=last?.tao_price&&allData[0]?.tao_price?(((last.tao_price/allData[0].tao_price)-1)*100):null;
+    taoRetEl.textContent=taoChg!=null?fp2(taoChg)+' vs Oct 27, 2025':'--';
+    taoRetEl.style.color=taoChg!=null?(taoChg>=0?'var(--green)':'var(--red)'):'var(--faint)';
   }
-  if(mcapEl&&last?.tao_price){
-    // estimate total classified subnet mcap from the composite index movement
-    // we dont have raw mcap in data.json so note it
-    mcapEl.textContent='See Taostats';
-    mcapEl.style.fontSize='12px';
+  if(mcapEl){
+    const firstMcap=allData[0]?.total_mcap_usd;
+    const lastMcap=last?.total_mcap_usd;
+    const fmt=v=>v>=1e9?'$'+(v/1e9).toFixed(2)+'B':'$'+(v/1e6).toFixed(0)+'M';
+    mcapEl.textContent=lastMcap?fmt(lastMcap):'--';
+    const mcapSub=document.getElementById('tao-detail-mcap-sub');
+    if(mcapSub&&firstMcap&&lastMcap){
+      const chg=((lastMcap/firstMcap)-1)*100;
+      mcapSub.textContent=`${fmt(firstMcap)} at inception · ${fp2(chg)}`;
+      mcapSub.style.color=chg>=0?'var(--green)':'var(--red)';
+    }
   }
   if(spreadEl){
     const spread=tmRet-taoRetAll;
@@ -816,6 +840,11 @@ function updateStats(){
   te.className='stat-val';
   document.getElementById('s-date').textContent=last?.date??'--';
   document.getElementById('hd-date').textContent=`As of ${last?.date??'--'}`;
+  const mcapEl=document.getElementById('s-mcap');
+  if(mcapEl&&last?.total_mcap_usd){
+    const m=last.total_mcap_usd;
+    mcapEl.textContent=m>=1e9?'$'+(m/1e9).toFixed(1)+'B':'$'+(m/1e6).toFixed(0)+'M';
+  }
 }
 
 // TOGGLES
